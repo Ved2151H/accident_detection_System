@@ -1,0 +1,17 @@
+# Ignore CSV files
+*.csv
+
+# Ignore installers and compressed files
+*.exe
+*.msix
+*.tar
+*.tar.gz
+*.tar.xz
+*.zip
+*.7z
+
+# Ignore virtual environments
+venv/
+
+# Ignore editor config
+.vscode/
