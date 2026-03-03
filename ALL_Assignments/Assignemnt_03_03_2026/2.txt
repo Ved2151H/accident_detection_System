@@ -1,0 +1,24 @@
+DSA Practice Problem - Cutting Trees Optimally
+Problem Statement:
+You are given N trees arranged in a straight line. Each tree has a height H[i]. You are allowed to cut
+a tree only if its height is strictly greater than both of its immediate neighbors. When you cut a tree: 
+You gain wood equal to its height. - The tree is removed from the line. - The neighbors become
+adjacent. Your task is to determine the maximum total wood you can collect.
+Input Format:
+First line: Integer N
+Second line: N space-separated integers H[i]
+Output Format:
+Print the maximum wood collected.
+Constraints:
+1 ≤ N ≤ 10^5
+1 ≤ H[i] ≤ 10^9
+Example:
+Input:
+5
+2 5 3 4 1
+Output:
+9
+Explanation:
+Cut 5 first (gain 5). New array: 2 3 4 1
+Then cut 4 (gain 4). New array: 2 3 1
+Total wood collected = 5 + 4 = 9
