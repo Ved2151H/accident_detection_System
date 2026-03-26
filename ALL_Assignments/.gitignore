@@ -12,6 +12,21 @@
 
 # Ignore virtual environments
 venv/
+gpu_env/
+**/gpu_env/
 
 # Ignore editor config
 .vscode/
+
+# Ignore python cache
+__pycache__/
+*.pyc
+
+# Ignore images
+*.jpg
+*.jpeg
+*.png
+
+# Ignore dataset folders
+data/
+**/data/
