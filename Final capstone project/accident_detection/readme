@@ -1,0 +1,33 @@
+Accident Detection System
+Real-time traffic accident and anomaly detection from CCTV footage using YOLOv8 + LSTM.
+Quick Start
+bash# 1. Clone the repo
+git clone <your-repo-url>
+cd accident_detection
+
+# 2. Create virtual environment
+python -m venv venv
+source venv/bin/activate   # Windows: venv\Scripts\activate
+
+# 3. Run Day 1 setup
+python setup.py
+
+# 4. Fill in credentials
+nano .env
+Project Structure
+accident_detection/
+├── data/               # Datasets (gitignored)
+├── models/             # Saved model weights
+├── pipeline/           # OpenCV + inference code
+├── alerts/             # SMS & email alert scripts
+├── dashboard/          # Streamlit app
+├── tests/              # Test scripts
+├── logs/               # Incident logs
+├── setup.py            # Day 1 setup script
+├── requirements.txt    # Python dependencies
+├── PLAN.md             # Project plan
+└── .env                # Credentials (gitignored)
+Dataset
+Download UCF-Crime: https://www.crcv.ucf.edu/projects/real-world/
+Tech Stack
+YOLOv8 · OpenCV · TorchVision · LSTM · Streamlit · Twilio · Flask
