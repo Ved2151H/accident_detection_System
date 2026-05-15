@@ -9,7 +9,7 @@ cd accident_detection
 python -m venv venv
 source venv/bin/activate   # Windows: venv\Scripts\activate
 
-# 3. Run Day 1 setup
+# 3. Run  setup
 python setup.py
 
 # 4. Fill in credentials
