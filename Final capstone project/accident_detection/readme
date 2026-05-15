@@ -31,3 +31,16 @@ Dataset
 Download UCF-Crime: https://www.crcv.ucf.edu/projects/real-world/
 Tech Stack
 YOLOv8 · OpenCV · TorchVision · LSTM · Streamlit · Twilio · Flask
+
+
+How it works
+
+CCTV Frame
+    ↓
+YOLOv8 → vehicles detected?  → Road accident pipeline
+        → 5+ persons clustered? → Crowd/fight pipeline
+    ↓
+LSTM (per pipeline)
+    ↓
+Alert if anomaly_prob > threshold
+ (train test split , some for the scripts)
