@@ -21,7 +21,7 @@
     <p><strong>Name:</strong> Ved Devanand Dhanokar </p>
     <p><strong>Email ID:</strong>ved.g37python@gmail.com</p>
     <p><strong>College Name:</strong> Institute of Information and Communication Technology (IICT) </p>
-    <p><strong>Branch/Specialization :</strong> AI & ML</p>
+    <p><strong>Branch/Specialization :</strong> Information Technology </p>
     <p><strong>College ID:</strong> 2305039 </p>
 </div>
 
@@ -29,18 +29,18 @@
 
 <h2 style="color:#333;"> Course Details </h2>
 <div align="left" style="margin: 20px; font-size: 16px;">
-    <p><strong>Course Opted:</strong> <!--- Add your course name---> </p>
-    <p><strong>Instructor Name:</strong> <!--- Add your instructor name---> </p>
+    <p><strong>Course Opted:</strong> AI & ML </p>
+    <p><strong>Instructor Name:</strong> Gaurav Sir </p>
 </div>
 <div align="left" style="margin: 20px; font-size: 16px;">
-    <p><strong>Duration:</strong> <!--- Durations in months---> </p>
+    <p><strong>Duration:</strong> 6 months </p>
 
 <hr style="border: 0; border-top: 1px solid #ccc; width: 80%;" />
 
 <h2 style="color:#333;"> Trainer Details </h2>
 <div align="left" style="margin: 20px; font-size: 16px;">
 
-<p><strong>Trainer Name:</strong> <!–– Add trainer name ––></p>
+<p><strong>Trainer Name:</strong>Gaurav Sir</p>
 <p><strong>Trainer Email ID:</strong> <!–– Add trainer email ––></p>
 <p><strong>Trainer Designation:</strong> <!–– Add designation along with company––></p>
 
@@ -62,11 +62,10 @@
 
 
 ## Overall Learning 
+During this AIML internship, I learned the fundamentals of Artificial Intelligence and Machine Learning, including data preprocessing, model training, and performance evaluation.
+I gained hands-on experience with Python, machine learning libraries, and real-world AI project development.
+I also improved my skills in problem-solving, teamwork, research, documentation, and building practical AI-based solutions for real-world applications.
 
-> _This is a placeholder. Replace the text below with your personal learning summary._
-During this course, I learned the fundamentals of web development and project design.
-I gained hands-on experience with HTML, CSS, JavaScript and strengthened my skills in 
-problem-solving, teamwork, documentation, and delivering real-world project solutions.
 
 
 <h2 style="color:#333;"> Projects Completed </h2>
@@ -74,11 +73,8 @@ problem-solving, teamwork, documentation, and delivering real-world project solu
 
 <p><strong><a href="#project1">Project 1:</a></strong> &lt;!-- Add project title → --&gt;</p>
 
-<p><strong><a href="#project2">Project 2:</a></strong> &lt;!-- Add project title → --&gt;</p>
 
-<p><strong><a href="#project3">Project 3:</a></strong> &lt;!-- Add project title → --&gt;</p>
 
-<p><em>(You can add more projects as needed)</em></p>
 
 </div>
 
@@ -92,25 +88,6 @@ problem-solving, teamwork, documentation, and delivering real-world project solu
   <a href="<!-- Add link to full report -->" target="_blank"><strong>→ View Full Project Report</strong></a>
 </p>
 
-<!-- Project 2 -->
-<h3 id="project2">Project 2: <!-- Add Project Title --></h3>
-<p>
-  This project expanded on intermediate concepts and required integrating multiple components to build a more complete solution.
-  It enhanced understanding of UI/UX design, modular coding, and testing.
-</p>
-<p>
-  <a href="<!-- Add link to full report -->" target="_blank"><strong>→ View Full Project Report</strong></a>
-</p>
-
-<!-- Project 3 -->
-<h3 id="project3">Project 3: <!-- Add Project Title --></h3>
-<p>
-  The final project showcased the practical application of all concepts learned throughout the course.  
-  It required planning, building, optimizing, and documenting a complete real-world project.
-</p>
-<p>
-  <a href="<!-- Add link to full report -->" target="_blank"><strong>→ View Full Project Report</strong></a>
-</p>
 
 <hr style="height:1px; border-top:1px solid #ccc; width:80%;" />
 
