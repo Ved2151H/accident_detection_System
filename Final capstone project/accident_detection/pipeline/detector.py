@@ -35,8 +35,8 @@ HIDDEN_SIZE    = 128
 NUM_LAYERS     = 1
 NUM_CLASSES    = 2
 FRAME_SKIP     = 3        # process every Nth frame (speed vs accuracy)
-ACCIDENT_CONF  = 0.30     # YOLO confidence threshold to flag accident
-LSTM_THRESHOLD = 0.48     # LSTM probability threshold to confirm accident
+ACCIDENT_CONF  = 0.15     # YOLO confidence threshold to flag accident
+LSTM_THRESHOLD = 0.70     # LSTM probability threshold to confirm accident
 COOLDOWN_SECS  = 10       # min seconds between two alerts (avoid spam)
 DISPLAY        = True     # show live window (set False for headless server)
 # ─────────────────────────────────────────────────────────

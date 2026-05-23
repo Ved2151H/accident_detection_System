@@ -100,7 +100,7 @@ class SequenceDataset(Dataset):
                         self.sequences.append((seq, label))
                         seq_count += 1
 
-            print(f"  {split}/{cls}: {len(all_frames)} frames → "
+            print(f"  {split}/{cls}: {len(all_frames)} frames -> "
                   f"{seq_count} sequences")
 
         random.shuffle(self.sequences)
@@ -127,8 +127,7 @@ class FeatureExtractor(nn.Module):
         super().__init__()
         resnet = models.resnet18(weights=models.ResNet18_Weights.DEFAULT)
         self.backbone = nn.Sequential(*list(resnet.children())[:-1])
-        for param in self.backbone.parameters():
-            param.requires_grad = False   # frozen
+        # Keep backbone trainable (unfrozen) to allow representation fine-tuning
 
     def forward(self, x):
         B, S, C, H, W = x.shape
@@ -225,10 +224,17 @@ def train():
     print(f"\n[2/4] Building model...")
     model     = AccidentLSTM().to(DEVICE)
     criterion = nn.CrossEntropyLoss()
-    optimizer = torch.optim.AdamW(
-        filter(lambda p: p.requires_grad, model.parameters()),
-        lr=LEARNING_RATE, weight_decay=1e-4
-    )
+    
+    # Configure differential learning rates:
+    # 1. ResNet18 backbone parameters: very small lr to gently fine-tune visual features
+    # 2. LSTM and Classification head: standard learning rate (3e-4) for sequential temporal learning
+    backbone_params = list(model.extractor.backbone.parameters())
+    lstm_classifier_params = list(model.lstm.parameters()) + list(model.classifier.parameters())
+    
+    optimizer = torch.optim.AdamW([
+        {'params': backbone_params, 'lr': 1e-5},
+        {'params': lstm_classifier_params, 'lr': LEARNING_RATE}
+    ], weight_decay=1e-4)
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
         optimizer, T_max=EPOCHS
     )
@@ -254,7 +260,7 @@ def train():
             model, val_dl,   criterion, optimizer, scaler, training=False)
         scheduler.step()
 
-        improved = "✓" if val_acc > best_acc else " "
+        improved = "[NEW BEST]" if val_acc > best_acc else " "
         print(f"  Epoch {epoch+1:02d}/{EPOCHS} | "
               f"loss={train_loss:.4f} | "
               f"train={train_acc:.2%} | "
@@ -268,7 +274,7 @@ def train():
         else:
             no_improve += 1
             if no_improve >= 15:
-                print(f"\n  Early stopping — no improvement for 15 epochs.")
+                print(f"\n  Early stopping - no improvement for 15 epochs.")
                 break
 
     print(f"\n[4/4] Done.")
@@ -276,9 +282,9 @@ def train():
     print(f"  Saved to          : {MODEL_SAVE_DIR}/lstm_best.pt")
 
     if best_acc >= 0.80:
-        print("  STATUS: PASSED (>=80%) — ready for Day 4 ✓")
+        print("  STATUS: PASSED (>=80%) - ready for Day 4 [OK]")
     elif best_acc >= 0.70:
-        print("  STATUS: ACCEPTABLE (70–80%) — can proceed to Day 4")
+        print("  STATUS: ACCEPTABLE (70-80%) - can proceed to Day 4")
         print("  Note: Add more varied videos later to push above 80%")
     else:
         print("  STATUS: BELOW TARGET")

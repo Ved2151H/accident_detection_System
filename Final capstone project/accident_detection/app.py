@@ -30,6 +30,9 @@ import torchvision.models as models
 import torchvision.transforms as transforms
 from ultralytics import YOLO
 
+# Aegis Eye Premium DIGIPIN & Calibration imports
+from tools.digipin_helper import DigiPinHelper
+
 # ── Config ───────────────────────────────────────────────
 YOLO_WEIGHTS   = "runs/classify/models/accident_detector/weights/best.pt"
 LSTM_WEIGHTS   = "models/lstm_best.pt"
@@ -41,10 +44,207 @@ HIDDEN_SIZE    = 128
 NUM_LAYERS     = 1
 NUM_CLASSES    = 2
 FRAME_SKIP     = 3
-ACCIDENT_CONF  = 0.30
-LSTM_THRESHOLD = 0.48
+ACCIDENT_CONF  = 0.15
+LSTM_THRESHOLD = 0.70
 DEVICE         = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 # ─────────────────────────────────────────────────────────
+
+# Initialize DIGIPIN Helper Instance
+digipin_helper = DigiPinHelper()
+
+# ── Adaptive Statistical Calibration Engine ──────────────
+class AdaptiveThreatCalibrator:
+    def __init__(self, window_size=30, base_k_yolo=2.4, base_k_lstm=1.9):
+        self.window_size = window_size
+        self.k_yolo = base_k_yolo
+        self.k_lstm = base_k_lstm
+        self.yolo_history = []
+        self.lstm_history = []
+        self.default_yolo = ACCIDENT_CONF
+        self.default_lstm = LSTM_THRESHOLD
+        
+    def set_rigor(self, rigor_label):
+        if rigor_label == "Aggressive (Low Latency)":
+            self.k_yolo = 1.6
+            self.k_lstm = 1.4
+        elif rigor_label == "Conservative (Low False-Positives)":
+            self.k_yolo = 3.2
+            self.k_lstm = 2.4
+        else: # Standard (Recommended)
+            self.k_yolo = 2.4
+            self.k_lstm = 1.9
+
+    def update(self, yolo_score, lstm_score):
+        # Exclude active collision segments to avoid baseline contamination
+        if yolo_score < 0.40:
+            self.yolo_history.append(yolo_score)
+            if len(self.yolo_history) > self.window_size:
+                self.yolo_history.pop(0)
+        if lstm_score < 0.85:
+            self.lstm_history.append(lstm_score)
+            if len(self.lstm_history) > self.window_size:
+                self.lstm_history.pop(0)
+
+    def get_thresholds(self):
+        if len(self.yolo_history) >= 8:
+            mean_yolo = np.mean(self.yolo_history)
+            std_yolo = np.std(self.yolo_history)
+            dyn_yolo = max(0.12, mean_yolo + self.k_yolo * std_yolo)
+            dyn_yolo = min(0.35, dyn_yolo)
+        else:
+            dyn_yolo = self.default_yolo
+            
+        if len(self.lstm_history) >= 8:
+            mean_lstm = np.mean(self.lstm_history)
+            std_lstm = np.std(self.lstm_history)
+            dyn_lstm = max(0.60, mean_lstm + self.k_lstm * std_lstm)
+            dyn_lstm = min(0.85, dyn_lstm)
+        else:
+            dyn_lstm = self.default_lstm
+            
+        return round(dyn_yolo, 3), round(dyn_lstm, 3)
+
+# ── Custom Premium Dark Leaflet Cartography HTML ─────────
+def get_leaflet_html(lat, lon, digipin, is_incident=False, zoom=14):
+    color_theme = "#ff3333" if is_incident else "#00ffff"
+    popup_title = "🚨 ACTIVE ACCIDENT ANOMALY" if is_incident else "🛰️ BASE STATION MONITOR"
+    badge_style = (
+        "background: linear-gradient(135deg, #ff8c00, #ff4500); border: 1px solid #ffaa66;"
+        if is_incident else
+        "background: linear-gradient(135deg, #008080, #004d4d); border: 1px solid #00aaaa;"
+    )
+    
+    html = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="utf-8" />
+        <title>Aegis Eye Live Geolocation</title>
+        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+        <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+        <style>
+            html, body, #map {{
+                width: 100%;
+                height: 100%;
+                margin: 0;
+                padding: 0;
+                background-color: #06060c;
+            }}
+            /* Premium Cyberpunk Leaflet Customizations */
+            .leaflet-popup-content-wrapper {{
+                background: #0b0b14 !important;
+                border: 1px solid {color_theme} !important;
+                color: #e0e0ea !important;
+                border-radius: 12px !important;
+                font-family: monospace !important;
+                padding: 8px !important;
+                box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.6) !important;
+            }}
+            .leaflet-popup-tip {{
+                background: #0b0b14 !important;
+                border: 1px solid {color_theme} !important;
+            }}
+            .popup-title {{
+                color: {color_theme};
+                font-weight: 800;
+                font-size: 1.05rem;
+                letter-spacing: 1px;
+                border-bottom: 1px solid rgba(255,255,255,0.08);
+                padding-bottom: 6px;
+                margin-bottom: 10px;
+                text-transform: uppercase;
+            }}
+            .popup-item {{
+                margin: 6px 0;
+                font-size: 0.9rem;
+                line-height: 1.4;
+            }}
+            .digipin-badge-popup {{
+                display: block;
+                {badge_style}
+                color: #ffffff;
+                padding: 6px 10px;
+                border-radius: 6px;
+                font-size: 1rem;
+                font-weight: 800;
+                text-align: center;
+                letter-spacing: 1px;
+                margin-top: 8px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            }}
+            /* Custom Pulsing Target Marker styling */
+            .pulsing-marker {{
+                position: relative;
+            }}
+            .pin {{
+                width: 12px;
+                height: 12px;
+                background-color: {color_theme};
+                border-radius: 50%;
+                border: 2px solid #fff;
+                box-shadow: 0 0 10px {color_theme};
+                position: absolute;
+                top: 6px;
+                left: 6px;
+            }}
+            .pulse {{
+                width: 24px;
+                height: 24px;
+                border: 2px solid {color_theme};
+                border-radius: 50%;
+                position: absolute;
+                top: 0px;
+                left: 0px;
+                animation: pulsate 1.5s ease-out infinite;
+                opacity: 0;
+            }}
+            @keyframes pulsate {{
+                0% {{ transform: scale(0.1); opacity: 0.0; }}
+                50% {{ opacity: 0.8; }}
+                100% {{ transform: scale(1.3); opacity: 0.0; }}
+            }}
+        </style>
+    </head>
+    <body>
+        <div id="map"></div>
+        <script>
+            var map = L.map('map', {{
+                zoomControl: true,
+                attributionControl: false
+            }}).setView([{lat}, {lon}], {zoom});
+
+            // CartoDB DarkMatter - custom cyber aesthetic tiles
+            L.tileLayer('https://{{s}}.basemaps.cartocdn.com/dark_all/{{z}}/{{x}}/{{y}}{{r}}.png', {{
+                maxZoom: 20
+            }}).addTo(map);
+
+            // Pulsing target DivIcon
+            var pulsingIcon = L.divIcon({{
+                className: 'pulsing-marker',
+                html: '<div class="pulse"></div><div class="pin"></div>',
+                iconSize: [24, 24],
+                iconAnchor: [12, 12]
+            }});
+
+            var marker = L.marker([{lat}, {lon}], {{ icon: pulsingIcon }}).addTo(map);
+
+            var popupContent = f`
+                <div class="popup-title">{popup_title}</div>
+                <div class="popup-item"><b>LATITUDE:</b> {lat:.6f}° N</div>
+                <div class="popup-item"><b>LONGITUDE:</b> {lon:.6f}° E</div>
+                <div class="popup-item">
+                    <b>INDIA POST DIGIPIN:</b>
+                    <span class="digipin-badge-popup">🇮🇳 {digipin}</span>
+                </div>
+                {'<div class="popup-item" style="color: #ff3333; font-weight: bold; margin-top: 8px; text-align: center; font-size: 0.8rem; letter-spacing: 0.5px;">📡 DISPATCHING GPS TRACKER BEACON</div>' if is_incident else '<div class="popup-item" style="color: #00ffff; font-weight: bold; margin-top: 8px; text-align: center; font-size: 0.8rem; letter-spacing: 0.5px;">🟢 PATROL BEACONS SECURE</div>'}
+            `;
+
+            marker.bindPopup(popupContent).openPopup();
+        </script>
+    </body>
+    </html>
+    """
+    return html
 
 st.set_page_config(
     page_title = "Aegis Eye — Accident Detection & Localization System",
@@ -233,7 +433,7 @@ def init_db():
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         timestamp TEXT, source TEXT,
         yolo_conf REAL, lstm_prob REAL, snapshot TEXT,
-        latitude REAL, longitude REAL)""")
+        latitude REAL, longitude REAL, digipin TEXT)""")
     
     # Database migration checks
     cursor = conn.cursor()
@@ -244,16 +444,18 @@ def init_db():
             cursor.execute("ALTER TABLE incidents ADD COLUMN latitude REAL")
         if "longitude" not in columns:
             cursor.execute("ALTER TABLE incidents ADD COLUMN longitude REAL")
+        if "digipin" not in columns:
+            cursor.execute("ALTER TABLE incidents ADD COLUMN digipin TEXT")
     except Exception as e:
         print(f"DB Migration Error: {e}")
     conn.commit()
     conn.close()
 
-def log_incident(source, yolo_conf, lstm_prob, snapshot_path, latitude, longitude):
+def log_incident(source, yolo_conf, lstm_prob, snapshot_path, latitude, longitude, digipin):
     conn = sqlite3.connect(DB_PATH)
     conn.execute(
-        "INSERT INTO incidents (timestamp, source, yolo_conf, lstm_prob, snapshot, latitude, longitude) VALUES (?, ?, ?, ?, ?, ?, ?)",
-        (datetime.datetime.now().isoformat(), source, yolo_conf, lstm_prob, snapshot_path, latitude, longitude))
+        "INSERT INTO incidents (timestamp, source, yolo_conf, lstm_prob, snapshot, latitude, longitude, digipin) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+        (datetime.datetime.now().isoformat(), source, yolo_conf, lstm_prob, snapshot_path, latitude, longitude, digipin))
     conn.commit()
     conn.close()
 
@@ -282,7 +484,7 @@ def generate_gps():
     return round(base_lat + offset_lat, 6), round(base_lon + offset_lon, 6)
 
 # ── Core Threat Scan Inference on Single Frame ───────────
-def run_inference(frame, buffer, yolo, lstm):
+def run_inference(frame, buffer, yolo, lstm, accident_conf_val=ACCIDENT_CONF, lstm_threshold_val=LSTM_THRESHOLD):
     """Detects accidents and tracks vehicles using YOLO + LSTM."""
     rgb    = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
     tensor = frame_transform(rgb)
@@ -303,7 +505,7 @@ def run_inference(frame, buffer, yolo, lstm):
             probs    = torch.softmax(logits, dim=1)[0]
         lstm_acc = probs[0].item()
 
-    accident = (yolo_acc >= ACCIDENT_CONF and lstm_acc >= LSTM_THRESHOLD)
+    accident = (yolo_acc >= accident_conf_val and lstm_acc >= lstm_threshold_val)
 
     # Vehicle Tracking Overlay (Cyan tech bounding boxes)
     detector    = load_vehicle_detector()
@@ -337,6 +539,8 @@ if "frozen_frame" not in st.session_state:
     st.session_state.frozen_frame = None
 if "current_incident_data" not in st.session_state:
     st.session_state.current_incident_data = None
+if "calibrator" not in st.session_state:
+    st.session_state.calibrator = AdaptiveThreatCalibrator()
 
 # Initialize Database on boot
 init_db()
@@ -387,6 +591,25 @@ with st.sidebar:
     else:
         video_source = st.text_input("Enter RTSP stream address", "rtsp://192.168.1.100:554/stream")
         source_name = "RTSP Network Stream"
+
+    st.divider()
+    st.markdown("**⚙️ AUTOMATIC THREAT CALIBRATION**")
+    auto_calib = st.toggle("Enable AI Self-Calibration", value=True, help="Automatically adjust detection thresholds based on real-time background noise.")
+    
+    if auto_calib:
+        rigor = st.selectbox(
+            "Detection Rigor / Sensitivity",
+            ["Standard (Recommended)", "Aggressive (Low Latency)", "Conservative (Low False-Positives)"],
+            help="Adjust statistical deviation multipliers for dynamic thresholding."
+        )
+        st.session_state.calibrator.set_rigor(rigor)
+        # Fetch dynamically calculated thresholds
+        accident_conf, lstm_threshold = st.session_state.calibrator.get_thresholds()
+        
+        st.info(f"🤖 Dynamic YOLO Thr: {accident_conf:.1%}\n\n🤖 Dynamic LSTM Thr: {lstm_threshold:.1%}")
+    else:
+        accident_conf = st.slider("YOLO Accident Threshold", min_value=0.05, max_value=0.95, value=0.15, step=0.01, help="Calibrate YOLO classification trigger level.")
+        lstm_threshold = st.slider("LSTM Anomaly Threshold", min_value=0.05, max_value=0.95, value=0.70, step=0.01, help="Calibrate sequential temporal trigger level.")
 
     st.divider()
 
@@ -442,7 +665,7 @@ with right_pane:
 # ════════════════════════════════════════════════════════
 # CORE SYSTEM LOOP AND CONTROLLER
 # ════════════════════════════════════════════════════════
-def update_telemetry_standby(container, yolo_acc, lstm_acc):
+def update_telemetry_standby(container, yolo_acc, lstm_acc, yolo_thr=0.20, lstm_thr=0.48):
     with container:
         st.markdown(f"""
         <div class="normal-banner-green">
@@ -455,16 +678,26 @@ def update_telemetry_standby(container, yolo_acc, lstm_acc):
         
         c1, c2 = st.columns(2)
         c1.markdown(f"""
-        <div class="telemetry-card" style="border-color: rgba(0, 230, 118, 0.2);">
+        <div class="telemetry-card" style="border-color: rgba(0, 230, 118, 0.2); position: relative;">
             <span style="color: #00e676; font-weight: 600; text-transform: uppercase; font-size: 0.8rem;">YOLO NOISE LEVEL</span>
             <div class="metric-val" style="color: #00e676;">{yolo_acc:.2%}</div>
+            <div style="font-size: 0.75rem; color: #888; margin-top: 4px;">Trigger Threshold: {yolo_thr:.0%}</div>
+            <div style="background-color: #11111a; border-radius: 4px; height: 8px; margin-top: 6px; overflow: hidden; border: 1px solid rgba(255,255,255,0.05); position: relative;">
+                <div style="background: linear-gradient(95deg, #00e676, #00ffff); width: {yolo_acc * 100}%; height: 100%;"></div>
+                <div style="position: absolute; left: {yolo_thr * 100}%; top: 0; width: 2px; height: 100%; background-color: #ff3333; box-shadow: 0 0 4px #ff3333;" title="Threshold"></div>
+            </div>
         </div>
         """, unsafe_allow_html=True)
         
         c2.markdown(f"""
-        <div class="telemetry-card" style="border-color: rgba(0, 230, 118, 0.2);">
+        <div class="telemetry-card" style="border-color: rgba(0, 230, 118, 0.2); position: relative;">
             <span style="color: #00e676; font-weight: 600; text-transform: uppercase; font-size: 0.8rem;">LSTM ANOMALY RATE</span>
             <div class="metric-val" style="color: #00e676;">{lstm_acc:.2%}</div>
+            <div style="font-size: 0.75rem; color: #888; margin-top: 4px;">Trigger Threshold: {lstm_thr:.0%}</div>
+            <div style="background-color: #11111a; border-radius: 4px; height: 8px; margin-top: 6px; overflow: hidden; border: 1px solid rgba(255,255,255,0.05); position: relative;">
+                <div style="background: linear-gradient(95deg, #00e676, #00ffff); width: {lstm_acc * 100}%; height: 100%;"></div>
+                <div style="position: absolute; left: {lstm_thr * 100}%; top: 0; width: 2px; height: 100%; background-color: #ff3333; box-shadow: 0 0 4px #ff3333;" title="Threshold"></div>
+            </div>
         </div>
         """, unsafe_allow_html=True)
 
@@ -495,7 +728,12 @@ with db_container:
             else:
                 st.session_state.frozen_frame = None
                 
-            st.session_state.current_coords = (row["latitude"], row["longitude"])
+            # If historical incident lacks DIGIPIN, dynamically encode it on loading
+            digipin_val = row.get("digipin") if "digipin" in row else None
+            if not digipin_val or pd.isna(digipin_val):
+                digipin_val = digipin_helper.gps_to_digipin(row["latitude"], row["longitude"])
+                
+            st.session_state.current_coords = (row["latitude"], row["longitude"], digipin_val)
             st.session_state.current_incident_data = {
                 "yolo_conf": row["yolo_conf"],
                 "lstm_prob": row["lstm_prob"],
@@ -575,7 +813,11 @@ elif st.session_state.stream_running:
                 
                 # Inference
                 accident, yolo_acc, lstm_acc, annotated = run_inference(
-                    frame.copy(), buffer, yolo_model, lstm_model)
+                    frame.copy(), buffer, yolo_model, lstm_model, accident_conf, lstm_threshold)
+                
+                # Update automated statistical baseline
+                if auto_calib:
+                    st.session_state.calibrator.update(yolo_acc, lstm_acc)
                 
                 # Show live video frame
                 rgb_live = cv2.cvtColor(annotated, cv2.COLOR_BGR2RGB)
@@ -584,6 +826,7 @@ elif st.session_state.stream_running:
                 # Threat detected event trigger
                 if accident:
                     lat, lon = generate_gps()
+                    digipin_code = digipin_helper.gps_to_digipin(lat, lon)
                     
                     # Highlight vehicle spot in RED thick square box on the frozen frame
                     detector    = load_vehicle_detector()
@@ -598,6 +841,14 @@ elif st.session_state.stream_running:
                         for box in boxes:
                             x1, y1, x2, y2 = map(int, box.xyxy[0].tolist())
                             
+                            # Clip to frame boundaries to avoid out-of-bounds assertions
+                            x1 = max(0, min(x1, w - 1))
+                            x2 = max(0, min(x2, w - 1))
+                            y1 = max(0, min(y1, h - 1))
+                            y2 = max(0, min(y2, h - 1))
+                            if x2 <= x1 or y2 <= y1:
+                                continue
+                            
                             # Draw thick bright red square highlighting crash zone
                             cv2.rectangle(highlight_frame, (x1, y1), (x2, y2), (0, 0, 255), 4)
                             
@@ -611,9 +862,10 @@ elif st.session_state.stream_running:
                             
                             # Glowing red background overlay for the box
                             sub_r = highlight_frame[y1:y2, x1:x2]
-                            glow_r = np.zeros(sub_r.shape, dtype=np.uint8)
-                            glow_r[:, :] = [0, 0, 180]
-                            highlight_frame[y1:y2, x1:x2] = cv2.addWeighted(sub_r, 0.7, glow_r, 0.3, 0)
+                            if sub_r.size > 0:
+                                glow_r = np.zeros(sub_r.shape, dtype=np.uint8)
+                                glow_r[:, :] = [0, 0, 180]
+                                highlight_frame[y1:y2, x1:x2] = cv2.addWeighted(sub_r, 0.7, glow_r, 0.3, 0)
                             
                             # Label crash box
                             label_str = "💥 ACCIDENT SPOT TRIGGER"
@@ -630,12 +882,12 @@ elif st.session_state.stream_running:
                     
                     # Save incident files
                     snap_path = save_snapshot(highlight_frame)
-                    log_incident(source_name, yolo_acc, lstm_acc, snap_path, lat, lon)
+                    log_incident(source_name, yolo_acc, lstm_acc, snap_path, lat, lon, digipin_code)
                     
                     # Store threat session details
                     st.session_state.accident_frozen = True
                     st.session_state.frozen_frame = cv2.cvtColor(highlight_frame, cv2.COLOR_BGR2RGB)
-                    st.session_state.current_coords = (lat, lon)
+                    st.session_state.current_coords = (lat, lon, digipin_code)
                     st.session_state.current_incident_data = {
                         "yolo_conf": yolo_acc,
                         "lstm_prob": lstm_acc,
@@ -647,7 +899,7 @@ elif st.session_state.stream_running:
                     st.rerun()
                 
                 # Update Real-time scanning analytics
-                update_telemetry_standby(status_container, yolo_acc, lstm_acc)
+                update_telemetry_standby(status_container, yolo_acc, lstm_acc, accident_conf, lstm_threshold)
                 time.sleep(0.01)
                 
             cap.release()
