@@ -165,17 +165,17 @@ The LST (Life Skills Training) and SST sessions helped me improve my communicati
 
 
 <div align="center">
-### **Photos**
+
 
 <div align="center">
 
-<h3>Tree Plantation Drive</h3>
+<h3>Helping Elder Citizens</h3>
 
 <img src="Community%20Services/20260405_132117.jpg" width="30%">
 
 <img src="Community%20Services/20260405_132148.jpg" width="30%">
 
-<h3>Helping Elder Citizens</h3>
+<h3>Tree Plantation Drive</h3>
 
 <img src="Community%20Services/20260405_132503.jpg" width="30%">
 
