@@ -19,13 +19,13 @@
 <h2 style = "color:#333;"> Student Details </h2>
 <div align = "left" style ="margin: 20px; font-size: 16px;">
     <p><strong>Name:</strong> Ved Devanand Dhanokar </p>
-<<<<<<< HEAD
+
     <p><strong>Email ID:</strong>ved.g37python@gmail.com</p>
     <p><strong>College Name:</strong> Institute of Information and Communication Technology (IICT) </p>
-=======
+
     <p><strong>Email ID: </strong> ved.g37python@gmail.com </p>
     <p><strong>College Name:</strong>  Institute of Information and Communication Technology (IICT) </p>
->>>>>>> 6ad4d76 (project report)
+
     <p><strong>Branch/Specialization :</strong> Information Technology </p>
     <p><strong>College ID:</strong> 2305039 </p>
 </div>
@@ -45,9 +45,9 @@
 <h2 style="color:#333;"> Trainer Details </h2>
 <div align="left" style="margin: 20px; font-size: 16px;">
 
-<<<<<<< HEAD
+
 <p><strong>Trainer Name:</strong>Gaurav Sir</p>
-=======
+
 <p><strong>Trainer Name:</strong> Gaurav Sir </p>
 >>>>>>> 6ad4d76 (project report)
 <p><strong>Trainer Email ID:</strong> <!–– Add trainer email ––></p>
@@ -71,37 +71,34 @@
 
 
 ## Overall Learning 
-<<<<<<< HEAD
+
 During this AIML internship, I learned the fundamentals of Artificial Intelligence and Machine Learning, including data preprocessing, model training, and performance evaluation.
 I gained hands-on experience with Python, machine learning libraries, and real-world AI project development.
 I also improved my skills in problem-solving, teamwork, research, documentation, and building practical AI-based solutions for real-world applications.
 
-=======
+
 
 During this AIML internship, I learned the fundamentals of Artificial Intelligence and Machine Learning, including data preprocessing, model training, and performance evaluation. I gained hands-on experience with Python, machine learning libraries, and real-world AI project development. I also improved my skills in problem-solving, teamwork, research, documentation, and building practical AI-based solutions for real-world applications.
->>>>>>> 6ad4d76 (project report)
+
 
 
 <h2 style="color:#333;"> Projects Completed </h2>
 <div align="left" style="margin: 20px; font-size: 16px;">
 
-<<<<<<< HEAD
-<p><strong><a href="#project1">Project 1:</a></strong> &lt;!-- Add project title → --&gt;</p>
 
 
 
-=======
 <p><strong><a href="https://github.com/sure-trust/VED-DEVANAND-DHANOKAR-g37-ai-ml/tree/main/Final%20capstone%20project/accident_detection">Project 1:</a></strong> &lt; road hazard detection &gt;</p>
 
 <p><strong><a href="https://github.com/Ved2151H/breast-cancer-using-resnet18">Project 2:</a></strong> &lt;breast-cancer-using-resnet18 &gt;</p>
 
 <p><strong><a href="https://github.com/Ved2151H/DocuMind_AI_using_-Ollama">Project 3:</a></strong> &lt;DocuMind_AI_using_Ollama&gt;</p>
->>>>>>> 6ad4d76 (project report)
+
 
 </div>
 
 <!-- Project 1 -->
-<<<<<<< HEAD
+
 <h3 id="project1">Project 1: <!-- Add Project Title --></h3>
 <p>
   This project involved designing and developing a basic functional module using the core concepts taught in the course.
@@ -111,7 +108,7 @@ During this AIML internship, I learned the fundamentals of Artificial Intelligen
   <a href="<!-- Add link to full report -->" target="_blank"><strong>→ View Full Project Report</strong></a>
 </p>
 
-=======
+
 <h3 id="project1">Project 1: road hazard detection</h3>
 <p>
  “Accident Detection System,” is an AI-powered safety solution that detects road accidents in real time using computer vision and machine learning techniques. The system analyzes video input through deep learning models to identify accidents quickly and can be integrated with alert systems to improve emergency response and road safety. It demonstrates practical applications of AI, OpenCV, and real-time monitoring in intelligent transportation systems.
@@ -137,7 +134,7 @@ During this AIML internship, I learned the fundamentals of Artificial Intelligen
 <p>
   <a href="https://github.com/Ved2151H/DocuMind_AI_using_-Ollama" target="_blank"><strong>→ View Full Project Report</strong></a>
 </p>
->>>>>>> 6ad4d76 (project report)
+
 
 <hr style="height:1px; border-top:1px solid #ccc; width:80%;" />
 
