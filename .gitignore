@@ -1,0 +1,37 @@
+# Videos
+*.mp4
+*.avi
+*.mov
+*.mkv
+
+# Images
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.bmp
+*.webp
+
+# Datasets / folders
+dataset/
+datasets/
+data/
+accident/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Virtual environment
+venv/
+.env
+
+# Model files
+*.pt
+*.pth
+*.h5
+*.ckpt
+
+# System files
+.DS_Store
+Thumbs.db
