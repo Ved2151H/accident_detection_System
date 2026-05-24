@@ -20,14 +20,13 @@
 <div align = "left" style ="margin: 20px; font-size: 16px;">
     <p><strong>Name:</strong> Ved Devanand Dhanokar </p>
 
-    <p><strong>Email ID:</strong>ved.g37python@gmail.com</p>
-    <p><strong>College Name:</strong> Institute of Information and Communication Technology (IICT) </p>
+   <p><strong>Email ID:</strong> ved.g37python@gmail.com</p>
 
-    <p><strong>Email ID: </strong> ved.g37python@gmail.com </p>
-    <p><strong>College Name:</strong>  Institute of Information and Communication Technology (IICT) </p>
+<p><strong>College Name:</strong> Institute of Information and Communication Technology (IICT)</p>
 
-    <p><strong>Branch/Specialization :</strong> Information Technology </p>
-    <p><strong>College ID:</strong> 2305039 </p>
+<p><strong>Branch/Specialization:</strong> Information Technology</p>
+
+<p><strong>College ID:</strong> 2305039</p>
 </div>
 
 <hr style="border: 0; border-top: 1px solid #ccc; width: 80%;" />
@@ -45,7 +44,6 @@
 <h2 style="color:#333;"> Trainer Details </h2>
 <div align="left" style="margin: 20px; font-size: 16px;">
 
-
 <p><strong>Trainer Name:</strong>Gaurav Sir</p>
 
 <p><strong>Trainer Name:</strong> Gaurav Sir </p>
@@ -56,6 +54,7 @@
 <hr style="border: 0; border-top: 1px solid #ccc; width: 80%;" />
 
 ## **Table of Contents**
+
 - [Course Learning](#course-learning-to-be-edited-by-student)
 - [Projects Completed](#projects-completed)
 - [Project Introduction](#project-introduction)
@@ -69,31 +68,20 @@
 
 <hr style="border: 0; border-top: 1px solid #ccc; width: 80%;" />
 
-
-## Overall Learning 
+## Overall Learning
 
 During this AIML internship, I learned the fundamentals of Artificial Intelligence and Machine Learning, including data preprocessing, model training, and performance evaluation.
 I gained hands-on experience with Python, machine learning libraries, and real-world AI project development.
 I also improved my skills in problem-solving, teamwork, research, documentation, and building practical AI-based solutions for real-world applications.
 
-
-
-During this AIML internship, I learned the fundamentals of Artificial Intelligence and Machine Learning, including data preprocessing, model training, and performance evaluation. I gained hands-on experience with Python, machine learning libraries, and real-world AI project development. I also improved my skills in problem-solving, teamwork, research, documentation, and building practical AI-based solutions for real-world applications.
-
-
-
 <h2 style="color:#333;"> Projects Completed </h2>
 <div align="left" style="margin: 20px; font-size: 16px;">
-
-
-
 
 <p><strong><a href="https://github.com/sure-trust/VED-DEVANAND-DHANOKAR-g37-ai-ml/tree/main/Final%20capstone%20project/accident_detection">Project 1:</a></strong> &lt; road hazard detection &gt;</p>
 
 <p><strong><a href="https://github.com/Ved2151H/breast-cancer-using-resnet18">Project 2:</a></strong> &lt;breast-cancer-using-resnet18 &gt;</p>
 
 <p><strong><a href="https://github.com/Ved2151H/DocuMind_AI_using_-Ollama">Project 3:</a></strong> &lt;DocuMind_AI_using_Ollama&gt;</p>
-
 
 </div>
 
@@ -107,7 +95,6 @@ During this AIML internship, I learned the fundamentals of Artificial Intelligen
 <p>
   <a href="<!-- Add link to full report -->" target="_blank"><strong>→ View Full Project Report</strong></a>
 </p>
-
 
 <h3 id="project1">Project 1: road hazard detection</h3>
 <p>
@@ -135,59 +122,52 @@ During this AIML internship, I learned the fundamentals of Artificial Intelligen
   <a href="https://github.com/Ved2151H/DocuMind_AI_using_-Ollama" target="_blank"><strong>→ View Full Project Report</strong></a>
 </p>
 
-
 <hr style="height:1px; border-top:1px solid #ccc; width:80%;" />
-
 
 ## **References**
 
 - [Wikipedia](https://wikipedia.com)
 <!--you can add refrences over here in same syntax as above -->
----
 
+---
 
 ## **Learnings from LST and SST**
 
-<!-- add your experiences over here -->
-> _This is a placeholder. Replace the text below with your personal learning from LST and SST sessions summary._
-LST and SST sessions helped me....
----
+
+The LST (Life Skills Training) and SST sessions helped me improve my communication skills, confidence, teamwork, and professional behavior. I learned how to present ideas effectively, work collaboratively in teams, and manage tasks with better discipline and responsibility. These sessions also enhanced my problem-solving abilities, leadership qualities, and understanding of workplace ethics and interpersonal skills.
+
+## LST and SST sessions helped me....
 
 ## **Community Services**
 
-<!-- add descreption in your own words -->
-
-During my internship period, I participated in multiple community-oriented activities .....<!-- add descreption in your own words -->
+  During my internship period, I participated in various community service activities that helped me understand the importance of social responsibility, teamwork, and helping others. These activities gave me an opportunity to contribute positively to society while improving my communication, coordination, and leadership skills.
 
 ### **Activities Involved**
-<!-- add the location where you given -->
-- **Blood Donation** – Donated blood and supported basic assistance tasks during the camp.
-  
- <!-- add the location where you have panted -->
-- **Tree Plantation Drive** – Participated by planting trees and contributing to environmental improvement.
 
-  <!-- add the location where you helped -->
-- **Helping Elder Citizens** – Assisted two elderly individuals with simple daily tasks and provided support where needed. 
 
-<!-- you can write impacts according to your experience in your words-->
 
-### **Impact / Contribution**
+ - **Tree Plantation Drive** – Participated in a tree plantation activity at Chhatrapati Sambhajinagar , near M2 Garden and contributed towards environmental improvement and awareness.
 
-- Helped create a supportive environment during the blood donation camp. <!-- add the location where you given -->
-- Actively participated in promoting a greener and cleaner surroundings.
-- Offered personal assistance to elder citizens, strengthening community bonds.
-- Improved skills in communication, coordination, and social responsibility.
+
+
+- **Helping Elder Citizens** – Assisted elderly citizens at the TC Center, Chhatrapati Sambhajinagar, by helping them with simple daily activities and providing support whenever needed.
+
+
+
+- Contributed towards environmental awareness and cleaner surroundings through the tree plantation drive at Chhatrapati Sambhajinagar.
+
+- Assisted elderly citizens at the TC Center, Chhatrapati Sambhajinagar, helping strengthen community support and social responsibility.
 
 ### **Photos**
 
-<!-- add your photos below -->
-<!-- change url below with your image urls (inside  src='')-->
 
-- These are just placeholder (sample) images <!-- remove this line -->
+
+
 
 <div align="center">
-<img src="https://media.licdn.com/dms/image/v2/D561FAQEJNBia4UCa5w/feedshare-document-images_800/B56Zm5b6SJJkAg-/1/1759752731458?e=1766016000&v=beta&t=7GABy91-0FNbir386wPdJ-Grr385JzS3tR5LQIw1CWg" alt="Community Service Photo 1" width="30%">
-<img src="https://media.licdn.com/dms/image/v2/D561FAQEJNBia4UCa5w/feedshare-document-images_800/B56Zm5b6SJJkAg-/2/1759752731458?e=1766016000&v=beta&t=6RfJQWWqlQUPcCvDnQNW7kR6yf7w-wPDsIPxum409ck" alt="Community Service Photo 2" width="30%">
+<B>Planting Tree </B>   
+<img src="https://photos.app.goo.gl/4ipQ6XTWnoDKM5f17" alt="Community Service Photo 1" width="30%">
+<img src="https://photos.app.goo.gl/xQPtCmBTy6yxG8XKA" alt="Community Service Photo 2" width="30%">
 <img src="https://media.licdn.com/dms/image/v2/D561FAQEJNBia4UCa5w/feedshare-document-images_800/B56Zm5b6SJJkAg-/3/1759752731458?e=1766016000&v=beta&t=yWaunKdRdLUKBLbmM3UjRYYz-_GSCfWEQ3_R7dW0xLM" alt="Community Service Photo 3" width="30%">
 </div>
 
@@ -210,7 +190,3 @@ The internship certificate serves as an official acknowledgment of the successfu
 <!-- you can add Acknowledgments over here in same syntax as below . eg trainer name , company name , role etc -->
 
 - [Prof. Radhakumari Challa](https://www.linkedin.com/in/prof-radhakumari-challa-a3850219b) , Executive Director and Founder - [SURE Trust](https://www.suretrustforruralyouth.com/)
-<<<<<<< HEAD
-=======
-
->>>>>>> 6ad4d76 (project report)
