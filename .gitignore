@@ -35,3 +35,14 @@ venv/
 # System files
 .DS_Store
 Thumbs.db
+
+# Ignore all images
+*.png
+*.jpg
+*.jpeg
+
+# But allow community service images
+!Community Services/
+!Community Services/*.png
+!Community Services/*.jpg
+!Community Services/*.jpeg
