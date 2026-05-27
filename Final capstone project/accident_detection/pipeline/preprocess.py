@@ -19,8 +19,8 @@ OUTPUT_DIR     = r"D:\Subjects_Languages\Languages\VED-DEVANAND-DHANOKAR-g37-ai-
 FRAME_SIZE     = (640, 640)          # YOLOv8 default input
 FRAME_SKIP     = 5                   # extract every 5th frame
 SEQUENCE_LEN   = 16                  # frames per LSTM sequence
-TRAIN_RATIO    = 0.70
-VAL_RATIO      = 0.15
+TRAIN_RATIO    = 0.95
+VAL_RATIO      = 0.05
 # TEST_RATIO   = 0.15 (remainder)
 
 # ── Expected folder structure inside data/raw/ ───────────
@@ -139,7 +139,7 @@ def process_all():
     manifest_path = os.path.join(OUTPUT_DIR, "dataset_manifest.csv")
     df.to_csv(manifest_path, index=False)
 
-    print("\n── Dataset Summary ──────────────────────")
+    print("\n-- Dataset Summary ----------------------")
     if not df.empty:
         print(df.groupby(["split", "class"])["seq_length"].count().rename("sequences"))
         print(f"\nTotal sequences : {len(df)}")

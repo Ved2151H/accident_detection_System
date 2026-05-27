@@ -2,7 +2,7 @@ task: classify
 mode: train
 model: yolov8n-cls.pt
 data: data/yolo
-epochs: 30
+epochs: 50
 time: null
 patience: 30
 batch: 64
@@ -33,7 +33,7 @@ multi_scale: 0.0
 compile: false
 overlap_mask: true
 mask_ratio: 4
-dropout: 0.4
+dropout: 0.0
 val: true
 split: val
 save_json: false
@@ -48,7 +48,7 @@ source: null
 vid_stride: 1
 stream_buffer: false
 visualize: false
-augment: true
+augment: false
 agnostic_nms: false
 classes: null
 retina_masks: false

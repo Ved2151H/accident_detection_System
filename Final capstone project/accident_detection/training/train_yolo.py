@@ -16,7 +16,7 @@ from tqdm import tqdm
 PROCESSED_DIR  = "data/processed/frames"
 YOLO_DATA_DIR  = "data/yolo"
 MODEL_SAVE_DIR = "models"
-EPOCHS         = 30
+EPOCHS         = 50
 IMG_SIZE       = 224
 BATCH_SIZE     = 64       # RTX 4060 8GB handles this fine
 WORKERS        = 4        # reduced to avoid multi-process print spam
@@ -85,10 +85,10 @@ def train_yolo_classifier():
         device        = DEVICE,
         name          = "accident_detector",
         project       = MODEL_SAVE_DIR,
-        patience      = 30,
-        optimizer     = "Adam",
-        lr0           = 0.0001,
-        dropout       = 0.4,
+        patience      = 15,
+        optimizer     = "AdamW",
+        lr0           = 0.00005,
+        dropout       = 0.2,
         augment       = True,
         warmup_epochs = 5,
         plots         = True,
@@ -121,12 +121,12 @@ def evaluate_model():
         device = DEVICE,
     )
 
-    print(f"\n── Validation Results ───────────────────")
+    print(f"\n--- Validation Results ---")
     print(f"  Top-1 Accuracy : {metrics.top1:.2%}")
     print(f"  Top-5 Accuracy : {metrics.top5:.2%}")
 
     if metrics.top1 >= 0.80:
-        print("  STATUS: PASSED (>=80%) — ready for LSTM training")
+        print("  STATUS: PASSED (>=80%) - ready for LSTM training")
     else:
         print("  STATUS: BELOW TARGET")
         print("  Tips to improve:")

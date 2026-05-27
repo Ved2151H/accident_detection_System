@@ -25,10 +25,10 @@ MODEL_SAVE_DIR = "models"
 SEQUENCE_LEN   = 8                 # reduced from 16 — more sequences available
 HIDDEN_SIZE    = 128               # reduced — less overfitting
 NUM_LAYERS     = 1                 # reduced — simpler model
-EPOCHS         = 40
+EPOCHS         = 60
 BATCH_SIZE     = 32
-NUM_WORKERS    = 2
-LEARNING_RATE  = 0.0003
+NUM_WORKERS    = 0
+LEARNING_RATE  = 0.00015
 FEATURE_DIM    = 512               # ResNet18 output
 NUM_CLASSES    = 2                 # 0=accident, 1=normal
 
@@ -40,8 +40,6 @@ torch.backends.cudnn.benchmark = True
 train_transform = transforms.Compose([
     transforms.ToPILImage(),
     transforms.Resize((112, 112)),
-    transforms.RandomHorizontalFlip(),
-    transforms.ColorJitter(brightness=0.3, contrast=0.3),
     transforms.ToTensor(),
     transforms.Normalize([0.485, 0.456, 0.406],
                          [0.229, 0.224, 0.225]),
@@ -66,6 +64,7 @@ class SequenceDataset(Dataset):
         self.transform  = transform
         self.sequences  = []   # list of (frame_path_list, label)
         self.split      = split
+        self.cache      = {}   # path -> 112x112 BGR numpy array
 
         classes = {"accident": 0, "normal": 1}
 
@@ -92,8 +91,11 @@ class SequenceDataset(Dataset):
             seq_count = 0
             for vid_id, frames in video_groups.items():
                 frames = sorted(frames)
-                # Slide a window of SEQUENCE_LEN with stride SEQUENCE_LEN//2
-                stride = max(1, SEQUENCE_LEN // 2)
+                # Use a larger stride to avoid overlapping sequence redundancy
+                if self.split == "train":
+                    stride = SEQUENCE_LEN * 2
+                else:
+                    stride = SEQUENCE_LEN
                 for i in range(0, len(frames) - SEQUENCE_LEN + 1, stride):
                     seq = frames[i : i + SEQUENCE_LEN]
                     if len(seq) == SEQUENCE_LEN:
@@ -113,12 +115,22 @@ class SequenceDataset(Dataset):
         frame_paths, label = self.sequences[idx]
         imgs = []
         for fp in frame_paths:
-            img = cv2.imread(str(fp))
-            if img is None:
-                imgs.append(torch.zeros(3, 112, 112))
-                continue
-            img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-            imgs.append(self.transform(img))
+            fp_str = str(fp)
+            if fp_str in self.cache:
+                img_resized = self.cache[fp_str]
+            else:
+                img = cv2.imread(fp_str)
+                if img is None:
+                    img_resized = np.zeros((112, 112, 3), dtype=np.uint8)
+                else:
+                    if img.shape[0] != 112 or img.shape[1] != 112:
+                        img_resized = cv2.resize(img, (112, 112), interpolation=cv2.INTER_AREA)
+                    else:
+                        img_resized = img
+                self.cache[fp_str] = img_resized
+            
+            img_rgb = cv2.cvtColor(img_resized, cv2.COLOR_BGR2RGB)
+            imgs.append(self.transform(img_rgb))
         return torch.stack(imgs), label   # (seq_len, C, H, W), label
 
 # ── Feature Extractor ────────────────────────────────────
@@ -127,7 +139,9 @@ class FeatureExtractor(nn.Module):
         super().__init__()
         resnet = models.resnet18(weights=models.ResNet18_Weights.DEFAULT)
         self.backbone = nn.Sequential(*list(resnet.children())[:-1])
-        # Keep backbone trainable (unfrozen) to allow representation fine-tuning
+        # Freeze ResNet18 backbone parameters to speed up training dramatically
+        for param in self.backbone.parameters():
+            param.requires_grad = False
 
     def forward(self, x):
         B, S, C, H, W = x.shape
@@ -151,7 +165,7 @@ class AccidentLSTM(nn.Module):
         self.classifier = nn.Sequential(
             nn.Linear(HIDDEN_SIZE, 64),
             nn.ReLU(),
-            nn.Dropout(0.3),
+            nn.Dropout(0.35),
             nn.Linear(64, NUM_CLASSES),
         )
 
@@ -199,11 +213,11 @@ def train():
         print(f"  [OK]  GPU  : {torch.cuda.get_device_name(0)}")
         print(f"  [OK]  VRAM : {torch.cuda.get_device_properties(0).total_memory/1024**3:.1f} GB")
     else:
-        print("  [WARN] Running on CPU — will be slow")
+        print("  [WARN] Running on CPU - will be slow")
     print()
 
     print("=" * 55)
-    print("  Day 3 Part 2 — LSTM Temporal Classifier")
+    print("  Day 3 Part 2 - LSTM Temporal Classifier")
     print("=" * 55)
 
     print("\n[1/4] Building datasets...")
@@ -225,16 +239,9 @@ def train():
     model     = AccidentLSTM().to(DEVICE)
     criterion = nn.CrossEntropyLoss()
     
-    # Configure differential learning rates:
-    # 1. ResNet18 backbone parameters: very small lr to gently fine-tune visual features
-    # 2. LSTM and Classification head: standard learning rate (3e-4) for sequential temporal learning
-    backbone_params = list(model.extractor.backbone.parameters())
-    lstm_classifier_params = list(model.lstm.parameters()) + list(model.classifier.parameters())
-    
-    optimizer = torch.optim.AdamW([
-        {'params': backbone_params, 'lr': 1e-5},
-        {'params': lstm_classifier_params, 'lr': LEARNING_RATE}
-    ], weight_decay=1e-4)
+    # Only pass parameters that require gradients to the optimizer
+    trainable_params = [p for p in model.parameters() if p.requires_grad]
+    optimizer = torch.optim.AdamW(trainable_params, lr=LEARNING_RATE, weight_decay=1e-3)
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
         optimizer, T_max=EPOCHS
     )

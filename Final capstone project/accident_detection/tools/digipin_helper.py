@@ -1,11 +1,10 @@
 import logging
-from digipin import encode, decode
+import digipin
 
 logger = logging.getLogger("AegisEye.DigiPIN")
 
 class DigiPinHelper:
     def __init__(self):
-        # No initialization required for functional API
         pass
 
     def gps_to_digipin(self, lat: float, lon: float) -> str:
@@ -25,7 +24,7 @@ class DigiPinHelper:
             lat, lon = 18.5204, 73.8567
 
         try:
-            return encode(lat, lon)
+            return digipin.encode(lat, lon)
         except Exception as e:
             logger.error(f"Error encoding coordinates ({lat}, {lon}) to DIGIPIN: {e}")
             return "4FP-492-CMTF"
@@ -38,7 +37,8 @@ class DigiPinHelper:
             return 18.5204, 73.8567
         try:
             clean_code = code.replace("-", "").replace(" ", "").upper()
-            return decode(clean_code)
+            lat, lon = digipin.decode(clean_code)
+            return lat, lon
         except Exception as e:
             logger.error(f"Error decoding DIGIPIN code '{code}': {e}")
             return 18.5204, 73.8567

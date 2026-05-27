@@ -1,18 +1,9 @@
 """
-Day 5 — Sleek Single-Screen Command Center for Live Accident Detection
-Features:
-  - Unified premium dark mode dashboard layout
-  - Real-time video/webcam feed analysis
-  - Live vehicle tracking telemetry (Cyan bounding boxes)
-  - Automatic feed freezing on accident detection
-  - Accident spot localization (Thick glowing red collision squares)
-  - Procedural/Realistic GPS coordinates logging
-  - Live interactive map integration (st.map)
-  - Incident database history lookup and telemetry inspection
-Run: streamlit run day5_dashboard.py
+👀 AEGIS EYE — Accident Localization & Dispatch Dashboard
+Modular runner file acting as clean entrypoint coordinator.
+Run: streamlit run app.py
 """
 
-import sqlite3
 import os
 import cv2
 import time
@@ -25,508 +16,54 @@ import streamlit as st
 from pathlib import Path
 from PIL import Image
 import torch
-import torch.nn as nn
-import torchvision.models as models
-import torchvision.transforms as transforms
-from ultralytics import YOLO
 
-# Aegis Eye Premium DIGIPIN & Calibration imports
-from tools.digipin_helper import DigiPinHelper
-
-# ── Config ───────────────────────────────────────────────
-YOLO_WEIGHTS   = "runs/classify/models/accident_detector/weights/best.pt"
-LSTM_WEIGHTS   = "models/lstm_best.pt"
-DB_PATH        = "logs/incidents.db"
-SNAPSHOTS_DIR  = "logs/snapshots"
-SEQUENCE_LEN   = 8
-FEATURE_DIM    = 512
-HIDDEN_SIZE    = 128
-NUM_LAYERS     = 1
-NUM_CLASSES    = 2
-FRAME_SKIP     = 3
-ACCIDENT_CONF  = 0.15
-LSTM_THRESHOLD = 0.70
-DEVICE         = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-# ─────────────────────────────────────────────────────────
-
-# Initialize DIGIPIN Helper Instance
-digipin_helper = DigiPinHelper()
-
-# ── Adaptive Statistical Calibration Engine ──────────────
-class AdaptiveThreatCalibrator:
-    def __init__(self, window_size=30, base_k_yolo=2.4, base_k_lstm=1.9):
-        self.window_size = window_size
-        self.k_yolo = base_k_yolo
-        self.k_lstm = base_k_lstm
-        self.yolo_history = []
-        self.lstm_history = []
-        self.default_yolo = ACCIDENT_CONF
-        self.default_lstm = LSTM_THRESHOLD
-        
-    def set_rigor(self, rigor_label):
-        if rigor_label == "Aggressive (Low Latency)":
-            self.k_yolo = 1.6
-            self.k_lstm = 1.4
-        elif rigor_label == "Conservative (Low False-Positives)":
-            self.k_yolo = 3.2
-            self.k_lstm = 2.4
-        else: # Standard (Recommended)
-            self.k_yolo = 2.4
-            self.k_lstm = 1.9
-
-    def update(self, yolo_score, lstm_score):
-        # Exclude active collision segments to avoid baseline contamination
-        if yolo_score < 0.40:
-            self.yolo_history.append(yolo_score)
-            if len(self.yolo_history) > self.window_size:
-                self.yolo_history.pop(0)
-        if lstm_score < 0.85:
-            self.lstm_history.append(lstm_score)
-            if len(self.lstm_history) > self.window_size:
-                self.lstm_history.pop(0)
-
-    def get_thresholds(self):
-        if len(self.yolo_history) >= 8:
-            mean_yolo = np.mean(self.yolo_history)
-            std_yolo = np.std(self.yolo_history)
-            dyn_yolo = max(0.12, mean_yolo + self.k_yolo * std_yolo)
-            dyn_yolo = min(0.35, dyn_yolo)
-        else:
-            dyn_yolo = self.default_yolo
-            
-        if len(self.lstm_history) >= 8:
-            mean_lstm = np.mean(self.lstm_history)
-            std_lstm = np.std(self.lstm_history)
-            dyn_lstm = max(0.60, mean_lstm + self.k_lstm * std_lstm)
-            dyn_lstm = min(0.85, dyn_lstm)
-        else:
-            dyn_lstm = self.default_lstm
-            
-        return round(dyn_yolo, 3), round(dyn_lstm, 3)
-
-# ── Custom Premium Dark Leaflet Cartography HTML ─────────
-def get_leaflet_html(lat, lon, digipin, is_incident=False, zoom=14):
-    color_theme = "#ff3333" if is_incident else "#00ffff"
-    popup_title = "🚨 ACTIVE ACCIDENT ANOMALY" if is_incident else "🛰️ BASE STATION MONITOR"
-    badge_style = (
-        "background: linear-gradient(135deg, #ff8c00, #ff4500); border: 1px solid #ffaa66;"
-        if is_incident else
-        "background: linear-gradient(135deg, #008080, #004d4d); border: 1px solid #00aaaa;"
-    )
-    
-    html = f"""
-    <!DOCTYPE html>
-    <html>
-    <head>
-        <meta charset="utf-8" />
-        <title>Aegis Eye Live Geolocation</title>
-        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-        <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-        <style>
-            html, body, #map {{
-                width: 100%;
-                height: 100%;
-                margin: 0;
-                padding: 0;
-                background-color: #06060c;
-            }}
-            /* Premium Cyberpunk Leaflet Customizations */
-            .leaflet-popup-content-wrapper {{
-                background: #0b0b14 !important;
-                border: 1px solid {color_theme} !important;
-                color: #e0e0ea !important;
-                border-radius: 12px !important;
-                font-family: monospace !important;
-                padding: 8px !important;
-                box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.6) !important;
-            }}
-            .leaflet-popup-tip {{
-                background: #0b0b14 !important;
-                border: 1px solid {color_theme} !important;
-            }}
-            .popup-title {{
-                color: {color_theme};
-                font-weight: 800;
-                font-size: 1.05rem;
-                letter-spacing: 1px;
-                border-bottom: 1px solid rgba(255,255,255,0.08);
-                padding-bottom: 6px;
-                margin-bottom: 10px;
-                text-transform: uppercase;
-            }}
-            .popup-item {{
-                margin: 6px 0;
-                font-size: 0.9rem;
-                line-height: 1.4;
-            }}
-            .digipin-badge-popup {{
-                display: block;
-                {badge_style}
-                color: #ffffff;
-                padding: 6px 10px;
-                border-radius: 6px;
-                font-size: 1rem;
-                font-weight: 800;
-                text-align: center;
-                letter-spacing: 1px;
-                margin-top: 8px;
-                box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-            }}
-            /* Custom Pulsing Target Marker styling */
-            .pulsing-marker {{
-                position: relative;
-            }}
-            .pin {{
-                width: 12px;
-                height: 12px;
-                background-color: {color_theme};
-                border-radius: 50%;
-                border: 2px solid #fff;
-                box-shadow: 0 0 10px {color_theme};
-                position: absolute;
-                top: 6px;
-                left: 6px;
-            }}
-            .pulse {{
-                width: 24px;
-                height: 24px;
-                border: 2px solid {color_theme};
-                border-radius: 50%;
-                position: absolute;
-                top: 0px;
-                left: 0px;
-                animation: pulsate 1.5s ease-out infinite;
-                opacity: 0;
-            }}
-            @keyframes pulsate {{
-                0% {{ transform: scale(0.1); opacity: 0.0; }}
-                50% {{ opacity: 0.8; }}
-                100% {{ transform: scale(1.3); opacity: 0.0; }}
-            }}
-        </style>
-    </head>
-    <body>
-        <div id="map"></div>
-        <script>
-            var map = L.map('map', {{
-                zoomControl: true,
-                attributionControl: false
-            }}).setView([{lat}, {lon}], {zoom});
-
-            // CartoDB DarkMatter - custom cyber aesthetic tiles
-            L.tileLayer('https://{{s}}.basemaps.cartocdn.com/dark_all/{{z}}/{{x}}/{{y}}{{r}}.png', {{
-                maxZoom: 20
-            }}).addTo(map);
-
-            // Pulsing target DivIcon
-            var pulsingIcon = L.divIcon({{
-                className: 'pulsing-marker',
-                html: '<div class="pulse"></div><div class="pin"></div>',
-                iconSize: [24, 24],
-                iconAnchor: [12, 12]
-            }});
-
-            var marker = L.marker([{lat}, {lon}], {{ icon: pulsingIcon }}).addTo(map);
-
-            var popupContent = f`
-                <div class="popup-title">{popup_title}</div>
-                <div class="popup-item"><b>LATITUDE:</b> {lat:.6f}° N</div>
-                <div class="popup-item"><b>LONGITUDE:</b> {lon:.6f}° E</div>
-                <div class="popup-item">
-                    <b>INDIA POST DIGIPIN:</b>
-                    <span class="digipin-badge-popup">🇮🇳 {digipin}</span>
-                </div>
-                {'<div class="popup-item" style="color: #ff3333; font-weight: bold; margin-top: 8px; text-align: center; font-size: 0.8rem; letter-spacing: 0.5px;">📡 DISPATCHING GPS TRACKER BEACON</div>' if is_incident else '<div class="popup-item" style="color: #00ffff; font-weight: bold; margin-top: 8px; text-align: center; font-size: 0.8rem; letter-spacing: 0.5px;">🟢 PATROL BEACONS SECURE</div>'}
-            `;
-
-            marker.bindPopup(popupContent).openPopup();
-        </script>
-    </body>
-    </html>
-    """
-    return html
-
-st.set_page_config(
-    page_title = "Aegis Eye — Accident Detection & Localization System",
-    page_icon  = "🚨",
-    layout     = "wide",
+# ── Import Modular Components from dashboard package ──────
+from dashboard.config import (
+    YOLO_WEIGHTS, LSTM_WEIGHTS, DB_PATH, SNAPSHOTS_DIR,
+    SEQUENCE_LEN, FEATURE_DIM, HIDDEN_SIZE, NUM_LAYERS,
+    NUM_CLASSES, FRAME_SKIP, ACCIDENT_CONF, LSTM_THRESHOLD,
+    DEVICE, AdaptiveThreatCalibrator
 )
+from dashboard.database import (
+    init_db, log_incident, get_incidents, save_snapshot
+)
+from dashboard.map import get_leaflet_html
+from dashboard.models import (
+    load_models, load_vehicle_detector, frame_transform
+)
+from dashboard.telemetry import (
+    run_inference, update_telemetry_standby, render_feature_telemetry
+)
+from dashboard.utils import (
+    generate_gps, get_camera_location, randomize_camera_location, digipin_helper
+)
+def render_html(html_str, element=st):
+    # lstrip each line to prevent markdown preformatted code-block conversion
+    clean_lines = [line.lstrip() for line in html_str.splitlines()]
+    clean_html = "\n".join(clean_lines)
+    if hasattr(st, "html"):
+        element.html(clean_html)
+    else:
+        element.markdown(clean_html, unsafe_allow_html=True)
 
-# Custom High-End Cyberpunk Theme & CSS Styles
-st.markdown("""
-<style>
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Share+Tech+Mono&display=swap');
+st.set_page_config(page_title="Accident Detection Dashboard", layout="wide", initial_sidebar_state="expanded")
 
-/* Global resets and background */
-html, body, [data-testid="stAppViewContainer"] {
-    background-color: #06060c;
-    color: #e0e0ea;
-    font-family: 'Outfit', sans-serif;
-}
+# Initialize session state for theme
+if "theme" not in st.session_state:
+    st.session_state.theme = "Cyberpunk Dark"
 
-[data-testid="stHeader"] {
-    background-color: rgba(6, 6, 12, 0.8);
-    backdrop-filter: blur(10px);
-}
+# Theme Selection in Sidebar (renders at top of sidebar)
+with st.sidebar:
+    theme_choice = st.radio("🎨 Interface Theme Mode", ["Cyberpunk Dark", "Premium Light"])
+    st.session_state.theme = theme_choice
 
-[data-testid="stSidebar"] {
-    background-color: #0b0b14;
-    border-right: 1px solid #1f1f2e;
-}
+def load_css(theme):
+    css_file = Path("dashboard") / ("dark.css" if theme == "Cyberpunk Dark" else "light.css")
+    if css_file.exists():
+        with open(css_file, "r") as f:
+            st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 
-/* Sidebar styling */
-.sidebar-title {
-    font-family: 'Outfit', sans-serif;
-    font-weight: 800;
-    color: #ffffff;
-    font-size: 1.6rem;
-    margin-bottom: 0.2rem;
-    text-align: center;
-}
-
-.sidebar-subtitle {
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 0.8rem;
-    color: #00ffff;
-    letter-spacing: 2px;
-    text-align: center;
-    margin-bottom: 1.5rem;
-}
-
-/* Header & Telemetry Panels */
-.telemetry-card {
-    background: rgba(18, 18, 30, 0.75);
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    border-radius: 12px;
-    padding: 16px;
-    margin-bottom: 16px;
-    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
-}
-
-.card-header {
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 1.1rem;
-    letter-spacing: 1.5px;
-    color: #00ffff;
-    margin-bottom: 12px;
-    font-weight: 600;
-    text-transform: uppercase;
-    border-left: 3px solid #00ffff;
-    padding-left: 8px;
-}
-
-/* Status Banners */
-.accident-banner-red {
-    background: linear-gradient(135deg, #7c0000 0%, #3a0000 100%);
-    border: 2px solid #ff3333;
-    border-radius: 10px;
-    padding: 16px;
-    margin-bottom: 16px;
-    color: #ffffff;
-    box-shadow: 0 0 20px rgba(255, 51, 51, 0.4);
-    animation: glow-red 1.5s infinite alternate;
-}
-
-@keyframes glow-red {
-    from { box-shadow: 0 0 10px rgba(255, 51, 51, 0.2); }
-    to { box-shadow: 0 0 25px rgba(255, 51, 51, 0.6); }
-}
-
-.normal-banner-green {
-    background: linear-gradient(135deg, #004d26 0%, #002411 100%);
-    border: 2px solid #00e676;
-    border-radius: 10px;
-    padding: 16px;
-    margin-bottom: 16px;
-    color: #ffffff;
-    box-shadow: 0 0 15px rgba(0, 230, 118, 0.2);
-}
-
-/* Metric text */
-.metric-val {
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 2.2rem;
-    font-weight: 800;
-    margin-top: 4px;
-}
-
-.coord-display {
-    background: #0d0d18;
-    border-left: 4px solid #ff3333;
-    border-radius: 6px;
-    padding: 14px;
-    margin-bottom: 16px;
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 1.1rem;
-    color: #ff3333;
-    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.5);
-}
-
-/* Global dividers */
-.divider-neon {
-    height: 1px;
-    background: linear-gradient(90deg, transparent, #00ffff, transparent);
-    margin: 20px 0;
-}
-</style>
-""", unsafe_allow_html=True)
-
-# ── Transform ────────────────────────────────────────────
-frame_transform = transforms.Compose([
-    transforms.ToPILImage(),
-    transforms.Resize((112, 112)),
-    transforms.ToTensor(),
-    transforms.Normalize([0.485, 0.456, 0.406],
-                         [0.229, 0.224, 0.225]),
-])
-
-# ── LSTM Model Definitions ───────────────────────────────
-class FeatureExtractor(nn.Module):
-    def __init__(self):
-        super().__init__()
-        resnet = models.resnet18(weights=models.ResNet18_Weights.DEFAULT)
-        self.backbone = nn.Sequential(*list(resnet.children())[:-1])
-    def forward(self, x):
-        B, S, C, H, W = x.shape
-        x = x.view(B * S, C, H, W)
-        return self.backbone(x).view(B, S, FEATURE_DIM)
-
-class AccidentLSTM(nn.Module):
-    def __init__(self):
-        super().__init__()
-        self.extractor  = FeatureExtractor()
-        self.lstm       = nn.LSTM(FEATURE_DIM, HIDDEN_SIZE,
-                                   NUM_LAYERS, batch_first=True)
-        self.classifier = nn.Sequential(
-            nn.Linear(HIDDEN_SIZE, 64), nn.ReLU(),
-            nn.Dropout(0.3), nn.Linear(64, NUM_CLASSES),
-        )
-    def forward(self, x):
-        feat   = self.extractor(x)
-        out, _ = self.lstm(feat)
-        return self.classifier(out[:, -1, :])
-
-# ── Load models (cached) ─────────────────────────────────
-@st.cache_resource
-def load_models():
-    yolo = None
-    lstm = None
-    if Path(YOLO_WEIGHTS).exists():
-        yolo = YOLO(YOLO_WEIGHTS)
-    if Path(LSTM_WEIGHTS).exists():
-        lstm = AccidentLSTM().to(DEVICE)
-        lstm.load_state_dict(torch.load(LSTM_WEIGHTS, map_location=DEVICE))
-        lstm.eval()
-    return yolo, lstm
-
-# ── Vehicle detector for bounding boxes ─────────────────
-@st.cache_resource
-def load_vehicle_detector():
-    return YOLO("yolov8n.pt")
-
-# ── DB helper functions with schema migration ─────────────
-def init_db():
-    os.makedirs("logs", exist_ok=True)
-    os.makedirs(SNAPSHOTS_DIR, exist_ok=True)
-    conn = sqlite3.connect(DB_PATH)
-    conn.execute("""CREATE TABLE IF NOT EXISTS incidents (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        timestamp TEXT, source TEXT,
-        yolo_conf REAL, lstm_prob REAL, snapshot TEXT,
-        latitude REAL, longitude REAL, digipin TEXT)""")
-    
-    # Database migration checks
-    cursor = conn.cursor()
-    try:
-        cursor.execute("PRAGMA table_info(incidents)")
-        columns = [row[1] for row in cursor.fetchall()]
-        if "latitude" not in columns:
-            cursor.execute("ALTER TABLE incidents ADD COLUMN latitude REAL")
-        if "longitude" not in columns:
-            cursor.execute("ALTER TABLE incidents ADD COLUMN longitude REAL")
-        if "digipin" not in columns:
-            cursor.execute("ALTER TABLE incidents ADD COLUMN digipin TEXT")
-    except Exception as e:
-        print(f"DB Migration Error: {e}")
-    conn.commit()
-    conn.close()
-
-def log_incident(source, yolo_conf, lstm_prob, snapshot_path, latitude, longitude, digipin):
-    conn = sqlite3.connect(DB_PATH)
-    conn.execute(
-        "INSERT INTO incidents (timestamp, source, yolo_conf, lstm_prob, snapshot, latitude, longitude, digipin) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-        (datetime.datetime.now().isoformat(), source, yolo_conf, lstm_prob, snapshot_path, latitude, longitude, digipin))
-    conn.commit()
-    conn.close()
-
-def get_incidents():
-    if not Path(DB_PATH).exists():
-        return pd.DataFrame()
-    conn = sqlite3.connect(DB_PATH)
-    df = pd.read_sql_query("SELECT * FROM incidents ORDER BY id DESC", conn)
-    conn.close()
-    return df
-
-def save_snapshot(frame):
-    os.makedirs(SNAPSHOTS_DIR, exist_ok=True)
-    ts   = datetime.datetime.now().strftime("%Y%m%d_%H%M%S_%f")
-    path = os.path.join(SNAPSHOTS_DIR, f"incident_{ts}.jpg")
-    cv2.imwrite(path, frame)
-    return path
-
-# ── Realistic GPS Coordinate Generator ───────────────────
-def generate_gps():
-    # Centered in Pune, India
-    base_lat = 18.5204
-    base_lon = 73.8567
-    offset_lat = np.random.uniform(-0.015, 0.015)
-    offset_lon = np.random.uniform(-0.015, 0.015)
-    return round(base_lat + offset_lat, 6), round(base_lon + offset_lon, 6)
-
-# ── Core Threat Scan Inference on Single Frame ───────────
-def run_inference(frame, buffer, yolo, lstm, accident_conf_val=ACCIDENT_CONF, lstm_threshold_val=LSTM_THRESHOLD):
-    """Detects accidents and tracks vehicles using YOLO + LSTM."""
-    rgb    = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-    tensor = frame_transform(rgb)
-    buffer.append(tensor)
-
-    # YOLO classification (accident vs normal)
-    results  = yolo(frame, verbose=False)
-    top_cls  = results[0].probs.top1
-    top_conf = results[0].probs.top1conf.item()
-    yolo_acc = top_conf if top_cls == 0 else (1 - top_conf)
-
-    # LSTM Temporal sequence validation
-    lstm_acc = 0.0
-    if len(buffer) == SEQUENCE_LEN:
-        seq = torch.stack(list(buffer)).unsqueeze(0).to(DEVICE)
-        with torch.no_grad():
-            logits   = lstm(seq)
-            probs    = torch.softmax(logits, dim=1)[0]
-        lstm_acc = probs[0].item()
-
-    accident = (yolo_acc >= accident_conf_val and lstm_acc >= lstm_threshold_val)
-
-    # Vehicle Tracking Overlay (Cyan tech bounding boxes)
-    detector    = load_vehicle_detector()
-    cls_ids     = [2, 3, 5, 7]   # car, motorcycle, bus, truck (COCO)
-    det_results = detector(frame, verbose=False, classes=cls_ids)
-    boxes       = det_results[0].boxes
-    cls_names   = {2:"Car", 3:"Motorcycle", 5:"Bus", 7:"Truck"}
-
-    if boxes is not None and len(boxes):
-        for box in boxes:
-            x1, y1, x2, y2 = map(int, box.xyxy[0].tolist())
-            conf            = box.conf[0].item()
-            cls_id          = int(box.cls[0].item())
-            name            = cls_names.get(cls_id, "Vehicle")
-
-            # Draw elegant telemetry-cyan box
-            cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 255), 1)
-            cv2.putText(frame, f"{name} {conf:.0%}", (x1, max(y1 - 5, 12)),
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.4, (0, 255, 255), 1)
-
-    return accident, yolo_acc, lstm_acc, frame
+load_css(st.session_state.theme)
 
 # ── Session State Initialization ────────────────────────
 if "stream_running" not in st.session_state:
@@ -541,6 +78,10 @@ if "current_incident_data" not in st.session_state:
     st.session_state.current_incident_data = None
 if "calibrator" not in st.session_state:
     st.session_state.calibrator = AdaptiveThreatCalibrator()
+if "detection_mode" not in st.session_state:
+    st.session_state.detection_mode = "Strict 10+ Features Mode (Recommended)"
+if "last_features" not in st.session_state:
+    st.session_state.last_features = {}
 
 # Initialize Database on boot
 init_db()
@@ -555,21 +96,28 @@ if not yolo_model or not lstm_model:
 # SIDEBAR CONTROL PANEL
 # ════════════════════════════════════════════════════════
 with st.sidebar:
-    st.markdown('<div class="sidebar-title">🚨 AEGIS EYE</div>', unsafe_allow_html=True)
-    st.markdown('<div class="sidebar-subtitle">ACCIDENT LOCALIZATION & DISPATCH</div>', unsafe_allow_html=True)
+    render_html("""
+    <div style='text-align: center; margin-top: 15px;'>
+        <h1 class='sidebar-title'>👀 AEGIS EYE</h1>
+        <div class='sidebar-subtitle'>ACCIDENT LOCALIZATION & DISPATCH</div>
+    </div>
+    """)
+
     st.divider()
+    # Navigation removed per user request
 
     # Source Selection
-    source_type = st.selectbox("Select Camera Input Stream", ["📷 Laptop / USB Webcam", "📁 High-Res Demo footage", "📡 CCTV RTSP Stream"])
+    source_type = st.selectbox("Select Camera Input Stream", ["📷 Laptop / USB Webcam", "📁 High-Res Demo footage", "📤 Upload Custom Video", "📡 CCTV RTSP Stream"])
     video_source = None
     source_name = ""
+    source_key = "default"
 
     if source_type == "📷 Laptop / USB Webcam":
         cam_index = st.number_input("Webcam index", min_value=0, max_value=10, value=0, step=1)
         video_source = cam_index
         source_name = f"Webcam {cam_index}"
+        source_key = f"webcam_{cam_index}"
     elif source_type == "📁 High-Res Demo footage":
-        # Look for existing video files inside data/raw/accident
         accident_dir = Path("data/raw/accident")
         video_files = []
         if accident_dir.exists():
@@ -579,18 +127,53 @@ with st.sidebar:
             selected_file = st.selectbox("Select Demo Video Clip", [f.name for f in video_files])
             video_source = str(accident_dir / selected_file)
             source_name = f"Demo clip: {selected_file}"
+            source_key = f"demo_{selected_file}"
         else:
-            # Fallback upload
-            uploaded = st.file_uploader("Upload footage file", type=["mp4", "avi"])
-            if uploaded:
-                tfile = tempfile.NamedTemporaryFile(delete=False, suffix=Path(uploaded.name).suffix)
-                tfile.write(uploaded.read())
-                tfile.close()
-                video_source = tfile.name
-                source_name = f"Upload: {uploaded.name}"
+            st.info("No demo clips found in data/raw/accident. You can upload a file instead using the 'Upload Custom Video' option.")
+            source_key = "demo_none"
+    elif source_type == "📤 Upload Custom Video":
+        uploaded = st.file_uploader("Browse and upload video file", type=["mp4", "avi"])
+        if uploaded:
+            tfile = tempfile.NamedTemporaryFile(delete=False, suffix=Path(uploaded.name).suffix)
+            tfile.write(uploaded.read())
+            tfile.close()
+            video_source = tfile.name
+            source_name = f"Upload: {uploaded.name}"
+            source_key = f"upload_{uploaded.name}"
+            st.success(f"Video uploaded successfully: {uploaded.name}")
+            st.session_state.video_uploaded = True
+        else:
+            source_key = "upload_pending"
+            st.session_state.video_uploaded = False
     else:
         video_source = st.text_input("Enter RTSP stream address", "rtsp://192.168.1.100:554/stream")
         source_name = "RTSP Network Stream"
+        source_key = f"rtsp_{video_source}"
+
+    # Persistent camera location display & controls
+    loc_data = get_camera_location(source_key)
+    st.markdown('<div style="font-family: \'Share Tech Mono\', monospace; color: #0d9488; font-weight: bold; margin-bottom: 4px; margin-top: 8px;">📍 CAMERA GEOLOCATION (DUMMY)</div>', unsafe_allow_html=True)
+    
+    loc_card_border = "rgba(0, 255, 255, 0.2)" if st.session_state.theme == "Cyberpunk Dark" else "rgba(13, 148, 136, 0.2)"
+    loc_text_color = "#00ffff" if st.session_state.theme == "Cyberpunk Dark" else "#0d9488"
+    render_html(f"""
+    <div class="telemetry-card" style="border-color: {loc_card_border}; margin-bottom: 12px; padding: 12px;">
+        <span style="font-weight: 600; text-transform: uppercase; font-size: 0.75rem; color: #888;">Assigned Spot</span>
+        <div style="font-family: 'Share Tech Mono', monospace; font-size: 1rem; font-weight: bold; color: {loc_text_color}; margin-top: 4px;">📍 {loc_data['city_name']}</div>
+        <div style="font-size: 0.8rem; margin-top: 6px; line-height: 1.4;">
+            <b>LATITUDE:</b> {loc_data['lat']:.6f}° N<br>
+            <b>LONGITUDE:</b> {loc_data['lon']:.6f}° E
+        </div>
+        <div style="margin-top: 8px; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 8px;">
+            <b>INDIA POST DIGIPIN:</b>
+            <span style="display: block; font-family: 'Share Tech Mono', monospace; font-weight: 800; font-size: 0.95rem; color: {loc_text_color}; margin-top: 2px;">🇮🇳 {loc_data['digipin']}</span>
+        </div>
+    </div>
+    """)
+    
+    if st.button("🔄 Re-randomize Camera Location", width="stretch"):
+        randomize_camera_location(source_key)
+        st.rerun()
 
     st.divider()
     st.markdown("**⚙️ AUTOMATIC THREAT CALIBRATION**")
@@ -608,15 +191,24 @@ with st.sidebar:
         
         st.info(f"🤖 Dynamic YOLO Thr: {accident_conf:.1%}\n\n🤖 Dynamic LSTM Thr: {lstm_threshold:.1%}")
     else:
-        accident_conf = st.slider("YOLO Accident Threshold", min_value=0.05, max_value=0.95, value=0.15, step=0.01, help="Calibrate YOLO classification trigger level.")
-        lstm_threshold = st.slider("LSTM Anomaly Threshold", min_value=0.05, max_value=0.95, value=0.70, step=0.01, help="Calibrate sequential temporal trigger level.")
+        accident_conf = st.slider("YOLO Accident Threshold", min_value=0.05, max_value=0.95, value=0.20, step=0.01, help="Calibrate YOLO classification trigger level.")
+        lstm_threshold = st.slider("LSTM Anomaly Threshold", min_value=0.05, max_value=0.95, value=0.65, step=0.01, help="Calibrate sequential temporal trigger level.")
 
+    st.divider()
+    st.markdown("**🛡️ DETECTION RIGOR MODE**")
+    detection_mode = st.radio(
+        "Select Detection Mode",
+        ["Strict 10+ Features Mode (Recommended)", "Standard YOLO+LSTM Mode"],
+        help="Strict Mode requires all 10+ visual/physical telemetry features to be satisfied to trigger an accident."
+    )
+    st.session_state.detection_mode = detection_mode
+    
     st.divider()
 
     # System Buttons
     col_start, col_stop = st.columns(2)
-    start_sys = col_start.button("▶ START SYSTEM", type="primary", use_container_width=True)
-    stop_sys = col_stop.button("⏹ STOP SYSTEM", use_container_width=True)
+    start_sys = col_start.button("▶ START SYSTEM", type="primary", width="stretch")
+    stop_sys = col_stop.button("⏹ STOP SYSTEM", width="stretch")
 
     if start_sys:
         st.session_state.stream_running = True
@@ -634,17 +226,22 @@ with st.sidebar:
         st.session_state.current_incident_data = None
         st.rerun()
 
-    # Model Telemetry Information
-    st.divider()
-    st.markdown("**🛡️ SYSTEM HARDWARE METRICS**")
-    st.success(f"YOLOv8 Engine: Loaded ✓")
-    st.success(f"LSTM Core: Loaded ✓")
-    st.info(f"Target Processor: {str(DEVICE).upper()}")
+# ════════════════════════════════════════════════════════
+# HEADER BANNER RENDER
+# ════════════════════════════════════════════════════════
+st.markdown("""
+<div style='text-align: center; padding: 10px 0; margin-bottom: 25px;'>
+    <h2 style='font-family: "Outfit", sans-serif; font-weight: 800; font-size: 2.2rem; color: #ffffff; letter-spacing: 2px; margin: 0; text-transform: uppercase;'>
+        Road accident detection system
+    </h2>
+</div>
+""", unsafe_allow_html=True)
 
 # ════════════════════════════════════════════════════════
 # MAIN SCREEN LAYOUT
 # ════════════════════════════════════════════════════════
 left_pane, right_pane = st.columns([0.65, 0.35])
+alert_container = st.empty()  # Alert placeholder
 
 # Left Pane: Main Video Stream & Telemetry Banners
 with left_pane:
@@ -661,45 +258,6 @@ with right_pane:
     st.divider()
     st.markdown("<div class='card-header'>📋 INCIDENT DATABASE REGISTER</div>", unsafe_allow_html=True)
     db_container = st.empty()
-
-# ════════════════════════════════════════════════════════
-# CORE SYSTEM LOOP AND CONTROLLER
-# ════════════════════════════════════════════════════════
-def update_telemetry_standby(container, yolo_acc, lstm_acc, yolo_thr=0.20, lstm_thr=0.48):
-    with container:
-        st.markdown(f"""
-        <div class="normal-banner-green">
-            <h4 style="margin: 0; color: #00e676;">🟢 ACTIVE THREAT SCANNER</h4>
-            <p style="margin: 4px 0 0 0; font-size: 0.9rem; opacity: 0.9;">
-                Inference models analyzing feed in real-time. No threat anomalies detected.
-            </p>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        c1, c2 = st.columns(2)
-        c1.markdown(f"""
-        <div class="telemetry-card" style="border-color: rgba(0, 230, 118, 0.2); position: relative;">
-            <span style="color: #00e676; font-weight: 600; text-transform: uppercase; font-size: 0.8rem;">YOLO NOISE LEVEL</span>
-            <div class="metric-val" style="color: #00e676;">{yolo_acc:.2%}</div>
-            <div style="font-size: 0.75rem; color: #888; margin-top: 4px;">Trigger Threshold: {yolo_thr:.0%}</div>
-            <div style="background-color: #11111a; border-radius: 4px; height: 8px; margin-top: 6px; overflow: hidden; border: 1px solid rgba(255,255,255,0.05); position: relative;">
-                <div style="background: linear-gradient(95deg, #00e676, #00ffff); width: {yolo_acc * 100}%; height: 100%;"></div>
-                <div style="position: absolute; left: {yolo_thr * 100}%; top: 0; width: 2px; height: 100%; background-color: #ff3333; box-shadow: 0 0 4px #ff3333;" title="Threshold"></div>
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        c2.markdown(f"""
-        <div class="telemetry-card" style="border-color: rgba(0, 230, 118, 0.2); position: relative;">
-            <span style="color: #00e676; font-weight: 600; text-transform: uppercase; font-size: 0.8rem;">LSTM ANOMALY RATE</span>
-            <div class="metric-val" style="color: #00e676;">{lstm_acc:.2%}</div>
-            <div style="font-size: 0.75rem; color: #888; margin-top: 4px;">Trigger Threshold: {lstm_thr:.0%}</div>
-            <div style="background-color: #11111a; border-radius: 4px; height: 8px; margin-top: 6px; overflow: hidden; border: 1px solid rgba(255,255,255,0.05); position: relative;">
-                <div style="background: linear-gradient(95deg, #00e676, #00ffff); width: {lstm_acc * 100}%; height: 100%;"></div>
-                <div style="position: absolute; left: {lstm_thr * 100}%; top: 0; width: 2px; height: 100%; background-color: #ff3333; box-shadow: 0 0 4px #ff3333;" title="Threshold"></div>
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
 
 # ── DB Feed and Inspection Render ──
 df_db = get_incidents()
@@ -745,13 +303,13 @@ with db_container:
 if st.session_state.accident_frozen:
     # Render frozen accident state
     if st.session_state.frozen_frame is not None:
-        video_container.image(st.session_state.frozen_frame, use_column_width=True)
+        video_container.image(st.session_state.frozen_frame, width="stretch")
     else:
         video_container.warning("Incident snapshot frame not found on disk.")
 
     with status_container:
         data = st.session_state.current_incident_data
-        st.markdown(f"""
+        render_html(f"""
         <div class="accident-banner-red">
             <h3 style="margin: 0; color: white;">🚨 COLLISION DETECTED & SYSTEM FROZEN</h3>
             <p style="margin: 4px 0 0 0; font-size: 0.95rem; opacity: 0.9;">
@@ -759,24 +317,32 @@ if st.session_state.accident_frozen:
                 The camera feed has been frozen at the anomaly timestamp. Automatic rescue dispatch localizing.
             </p>
         </div>
-        """, unsafe_allow_html=True)
-        
+        """)
+        # Use DigiPin-based Leaflet map for incident location
+        if st.session_state.current_coords:
+            lat, lon, digipin_val = st.session_state.current_coords
+        else:
+            loc_data = get_camera_location(source_key)
+            lat, lon, digipin_val = loc_data["lat"], loc_data["lon"], loc_data["digipin"]
+            
+        leaflet_html = get_leaflet_html(lat, lon, digipin_val, is_incident=True)
+        st.iframe(leaflet_html, height=500)
         col_m1, col_m2 = st.columns(2)
-        col_m1.markdown(f"""
+        render_html(f"""
         <div class="telemetry-card" style="border-color: rgba(255, 51, 51, 0.3);">
             <span style="color: #ff3333; font-weight: 600; text-transform: uppercase; font-size: 0.8rem;">YOLO COLLISION PROBABILITY</span>
             <div class="metric-val" style="color: #ff3333;">{data['yolo_conf']:.2%}</div>
         </div>
-        """, unsafe_allow_html=True)
+        """, col_m1)
         
-        col_m2.markdown(f"""
+        render_html(f"""
         <div class="telemetry-card" style="border-color: rgba(255, 51, 51, 0.3);">
             <span style="color: #ff3333; font-weight: 600; text-transform: uppercase; font-size: 0.8rem;">LSTM TEMPORAL THREAT PROBABILITY</span>
             <div class="metric-val" style="color: #ff3333;">{data['lstm_prob']:.2%}</div>
         </div>
-        """, unsafe_allow_html=True)
+        """, col_m2)
 
-        if st.button("🔓 CLEAR ACTIVE ALERT & RESUME MONITORING", type="primary", use_container_width=True):
+        if st.button("🔓 CLEAR ACTIVE ALERT & RESUME MONITORING", type="primary", width="stretch"):
             st.session_state.accident_frozen = False
             st.session_state.frozen_frame = None
             st.session_state.current_coords = None
@@ -798,7 +364,10 @@ elif st.session_state.stream_running:
             st.session_state.stream_running = False
         else:
             buffer = collections.deque(maxlen=SEQUENCE_LEN)
+            yolo_conf_buffer = collections.deque(maxlen=SEQUENCE_LEN)
             frame_idx = 0
+            consecutive_accidents = 0
+            vehicle_tracks = {}
             
             while cap.isOpened() and st.session_state.stream_running:
                 ret, frame = cap.read()
@@ -813,7 +382,9 @@ elif st.session_state.stream_running:
                 
                 # Inference
                 accident, yolo_acc, lstm_acc, annotated = run_inference(
-                    frame.copy(), buffer, yolo_model, lstm_model, accident_conf, lstm_threshold)
+                    frame.copy(), buffer, yolo_model, lstm_model, vehicle_tracks, accident_conf, lstm_threshold)
+                yolo_conf_buffer.append(yolo_acc)
+                features = st.session_state.get("last_features", {})
                 
                 # Update automated statistical baseline
                 if auto_calib:
@@ -821,12 +392,18 @@ elif st.session_state.stream_running:
                 
                 # Show live video frame
                 rgb_live = cv2.cvtColor(annotated, cv2.COLOR_BGR2RGB)
-                video_container.image(rgb_live, use_column_width=True)
+                video_container.image(rgb_live, width="stretch")
                 
-                # Threat detected event trigger
+                # Threat detected event trigger with consecutive frames guard
                 if accident:
-                    lat, lon = generate_gps()
-                    digipin_code = digipin_helper.gps_to_digipin(lat, lon)
+                    consecutive_accidents += 1
+                else:
+                    consecutive_accidents = 0
+                
+                if consecutive_accidents >= 5:
+                    loc_data = get_camera_location(source_key)
+                    lat, lon = loc_data["lat"], loc_data["lon"]
+                    digipin_code = loc_data["digipin"]
                     
                     # Highlight vehicle spot in RED thick square box on the frozen frame
                     detector    = load_vehicle_detector()
@@ -899,7 +476,7 @@ elif st.session_state.stream_running:
                     st.rerun()
                 
                 # Update Real-time scanning analytics
-                update_telemetry_standby(status_container, yolo_acc, lstm_acc, accident_conf, lstm_threshold)
+                update_telemetry_standby(status_container, yolo_acc, lstm_acc, accident_conf, lstm_threshold, features)
                 time.sleep(0.01)
                 
             cap.release()
@@ -908,50 +485,86 @@ else:
     video_container.info("⚙️ Threat monitoring engine standby. Select a feed input and press '▶ START SYSTEM' in the control panel to begin.")
     
     with status_container:
-        st.markdown("""
+        render_html("""
         <div class="normal-banner-green" style="background: rgba(10, 25, 15, 0.3); border-color: #333344;">
             <h4 style="margin: 0; color: #888;">🛰️ STANDBY / AWAITING SIGNAL</h4>
             <p style="margin: 4px 0 0 0; font-size: 0.9rem; color: #777788;">
                 Inference core initialized. Ready to begin threat scanning.
             </p>
         </div>
-        """, unsafe_allow_html=True)
+        """)
 
 # ════════════════════════════════════════════════════════
 # GEOLOCATION DISPATCH MAP RENDERING
 # ════════════════════════════════════════════════════════
+# Location Alert display (Dynamic depending on state)
 if st.session_state.current_coords:
-    lat, lon = st.session_state.current_coords
-    with coords_container:
-        st.markdown(f"""
-        <div class="coord-display">
-            💥 LIVE CRASH VEHICLE LOCALIZATION:<br>
-            <b>LATITUDE:</b> {lat:.6f}° N<br>
-            <b>LONGITUDE:</b> {lon:.6f}° E<br>
-            <span style="font-size: 0.8rem; color: #ff3333; opacity: 0.8; font-weight: bold; animation: pulse 1s infinite;">
-                📡 DISPATCHING GPS TRACKER BEACON TO SPOT
-            </span>
-        </div>
-        """, unsafe_allow_html=True)
+    lat, lon, digipin_code = st.session_state.current_coords
+    render_html(f"""
+    <div style="background: linear-gradient(135deg, #7c0000 0%, #3a0000 100%); border: 2px solid #ff3333; border-radius: 12px; padding: 15px; margin-bottom: 20px; font-family: 'Share Tech Mono', monospace; box-shadow: 0 4px 15px rgba(255,51,51,0.3);">
+        <h3 style="margin: 0; color: #ffffff; font-weight: bold;">🚨 EMERGENCY DISPATCH ALERT</h3>
+        <p style="margin: 6px 0 0 0; font-size: 1.05rem; color: #ffcccc;">
+            Accident localized at base station coordinate position:<br>
+            <b>📍 LATITUDE:</b> {lat:.6f}° N &nbsp;&nbsp;|&nbsp;&nbsp; <b>📍 LONGITUDE:</b> {lon:.6f}° E<br>
+            <b>🇮🇳 INDIA POST DIGIPIN:</b> {digipin_code}
+        </p>
+    </div>
+    """, alert_container)
     
-    # Render map
-    map_df = pd.DataFrame({"lat": [lat], "lon": [lon]})
+    render_html(f"""
+    <div class="coord-display">
+        💥 LIVE CRASH VEHICLE LOCALIZATION:<br>
+        <b>LATITUDE:</b> {lat:.6f}° N<br>
+        <b>LONGITUDE:</b> {lon:.6f}° E<br>
+        <span style="font-size: 0.8rem; color: #ff3333; opacity: 0.8; font-weight: bold; animation: pulse 1s infinite;">
+            📡 DISPATCHING GPS TRACKER BEACON TO SPOT
+        </span>
+    </div>
+    """, coords_container)
+    
+    # Render premium Leaflet DigiPin map
     with map_container:
-        st.map(map_df, zoom=14)
+        leaflet_html = get_leaflet_html(lat, lon, digipin_code, is_incident=True, zoom=14)
+        st.iframe(leaflet_html, height=350)
 else:
-    # Standby central monitoring map view
-    with coords_container:
-        st.markdown("""
-        <div class="coord-display" style="border-left-color: #00ffff; color: #00ffff; background: #0f1620;">
-            🛰️ CENTRAL MONITORING BASE STATION:<br>
-            <b>LATITUDE:</b> 18.520400° N<br>
-            <b>LONGITUDE:</b> 73.856700° E<br>
-            <span style="font-size: 0.8rem; color: #00ffff; opacity: 0.8;">
-                🟢 ALL PATROL BEACONS SECURE
-            </span>
+    # Handle Location Alert when video is uploaded
+    if st.session_state.get("video_uploaded", False):
+        loc = get_camera_location(source_key)
+        render_html(f"""
+        <div style="background: rgba(13, 148, 136, 0.1); border: 2px solid #0d9488; border-radius: 12px; padding: 15px; margin-bottom: 20px; font-family: 'Share Tech Mono', monospace;">
+            <h3 style="margin: 0; color: #0d9488; font-weight: bold;">🛰️ CAMERA STREAM GEOLOCATION</h3>
+            <p style="margin: 6px 0 0 0; font-size: 1.05rem; color: #ffffff;">
+                Active camera stream location assigned:<br>
+                <b>📍 LATITUDE:</b> {loc['lat']:.6f}° N &nbsp;&nbsp;|&nbsp;&nbsp; <b>📍 LONGITUDE:</b> {loc['lon']:.6f}° E<br>
+                <b>🇮🇳 INDIA POST DIGIPIN:</b> {loc['digipin']}
+            </p>
         </div>
-        """, unsafe_allow_html=True)
+        """, alert_container)
+    else:
+        alert_container.empty()
+
+    # Standby central monitoring map view (dynamic based on selected feed's location)
+    loc_data = get_camera_location(source_key)
+    lat_val, lon_val = loc_data["lat"], loc_data["lon"]
+    digipin_val = loc_data["digipin"]
+    city_val = loc_data["city_name"]
+    
+    border_color = "#00ffff" if st.session_state.theme == "Cyberpunk Dark" else "#0d9488"
+    text_color = "#00ffff" if st.session_state.theme == "Cyberpunk Dark" else "#0f766e"
+    bg_color = "#0f1620" if st.session_state.theme == "Cyberpunk Dark" else "#f1f5f9"
+    
+    render_html(f"""
+    <div class="coord-display" style="border-left-color: {border_color}; color: {text_color}; background: {bg_color};">
+        🛰️ CAMERA BASE STATION ({city_val}):<br>
+        <b>LATITUDE:</b> {lat_val:.6f}° N<br>
+        <b>LONGITUDE:</b> {lon_val:.6f}° E<br>
+        <b>INDIA POST DIGIPIN:</b> 🇮🇳 {digipin_val}<br>
+        <span style="font-size: 0.8rem; color: {border_color}; opacity: 0.8; font-weight: bold;">
+            🟢 ALL PATROL BEACONS SECURE
+        </span>
+    </div>
+    """, coords_container)
         
-    map_df = pd.DataFrame({"lat": [18.5204], "lon": [73.8567]})
     with map_container:
-        st.map(map_df, zoom=12)
+        leaflet_html = get_leaflet_html(lat_val, lon_val, digipin_val, is_incident=False, zoom=12)
+        st.iframe(leaflet_html, height=350)
