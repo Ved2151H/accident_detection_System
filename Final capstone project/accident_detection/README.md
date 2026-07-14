@@ -1,140 +1,100 @@
-# 🛡️ Aegis Eye — Real-time Autonomous Accident Detection & Localization System
+# 🛡️ Aegis Eye — Real-time Autonomous Accident Detection System
 
-Aegis Eye is a production-grade Computer Vision and Deep Learning capstone project designed to autonomously monitor traffic camera streams, detect vehicle collisions in real time, freeze operational feeds at the timestamp of the threat, isolate the accident spot via thick red warning highlight boxes, and geolocalize the collision on an interactive map for emergency services dispatch.
-
----
-
-## 🏗️ Repository Architecture
-
-The repository has been restructured into a clean, modular, and professional folder hierarchy, separating model training, inference pipelines, utilities, testing, and deployment:
-
-```
-accident_detection/
-├── data/                  # Datasets (raw & processed UCF-Crime clips)
-├── models/                # Saved LSTM and YOLO model weights (.pt files)
-├── logs/                  # SQLite incident registry database and snapshot images
-├── runs/                  # YOLOv8 classification training runs
-├── pipeline/              # Preprocessing & core inference engines
-│   ├── preprocess.py      # Video frame extractor and manifest builder
-│   └── detector.py        # Pipeline threat detection engine
-├── training/              # Deep Learning model training scripts
-│   ├── train_yolo.py      # YOLOv8 classifier fine-tuning
-│   └── train_lstm.py      # LSTM ResNet18 sequence model training
-├── tools/                 # Data utility and cleansing scripts
-│   ├── fix_data.py        # Directory structure alignment script
-│   └── fix_data_leakage.py # Dataset overlap correction tool
-├── tests/                 # Threshold and pipeline verification
-│   └── test_thresholds.py # Real-time score visualizer and tuner
-├── alerts/                # Integration notification modules
-├── app.py                 # Main Streamlit unified command center entry point
-├── setup.py               # Repository installer and workspace initializer
-└── requirements.txt       # Python dependency manifest
-```
+Aegis Eye is a full-stack, production-grade Computer Vision and Deep Learning system designed to autonomously monitor traffic camera streams. It detects vehicle collisions, identifies helmet violations, and isolates threats in real time using a highly interactive React-based dashboard.
 
 ---
 
-## 🛰️ System Threat Pipeline Flow
+## 🏗️ Architecture & Technology Stack
 
-The system processes CCTV feeds frame-by-frame and coordinates threat response automatically:
+The project has been separated into a modern web stack:
 
-```
-                  ┌───────────────────────┐
-                  │   CCTV / Camera Feed  │
-                  └───────────┬───────────┘
-                              ▼
-                  ┌───────────────────────┐
-                  │ Preprocess & Skip     │
-                  └───────────┬───────────┘
-                              ▼
-                 ┌────────────┴────────────┐
-                 │ YOLOv8 Classify         │
-                 │   - Scene classification│
-                 │ LSTM Sequence check     │
-                 │   - Temporal anomalies  │
-                 └────────────┬────────────┘
-                              ▼
-                 ┌────────────┴────────────┐
-                 │    Collision Detected?  │
-                 └──────┬────────────┬─────┘
-                 Normal │            │ Yes (Both threshold crossed)
-                        ▼            ▼
-         ┌──────────────────┐    ┌──────────────────────────────────┐
-         │ Track vehicles in│    │ 1. Freeze Video Feed             │
-         │ elegant Cyan boxes│    │ 2. Detect & Highlight spot box   │
-         │ Keep stream live │    │ 3. Log to SQLite with timestamps  │
-         └──────────────────┘    │ 4. Procedurally generate GPS      │
-                                 │ 5. Plot Red Pin on st.map        │
-                                 └──────────────────────────────────┘
-```
+- **Frontend**: React.js, Vite, and CSS for a dynamic, sleek dashboard.
+- **Backend Server**: Node.js and Express.js handling REST APIs and WebSocket streams.
+- **Machine Learning Core**: Python, PyTorch, and YOLOv8 for running complex video processing, collision tracking, and inference.
 
 ---
 
-## 🚀 Installation & Local Setup
+## 🚀 Installation & Local Setup Guide
+
+Follow these steps carefully to install and run the project on a new PC.
 
 ### 1. Prerequisites
-Ensure Python 3.10+ and a CUDA-compatible environment (if using GPU acceleration) are installed.
+Ensure you have the following installed on your machine:
+- **Node.js**: v18+ (Download from [nodejs.org](https://nodejs.org/))
+- **Python**: v3.9 - 3.11 (Download from [python.org](https://www.python.org/downloads/))
+- **Git**: (Download from [git-scm.com](https://git-scm.com/))
 
-### 2. Environment Initialization
-Clone the repository, initialize a Python virtual environment, and install dependencies:
-```powershell
-# Create virtual environment
+### 2. Clone the Repository
+Open a terminal (or Command Prompt) and run:
+```bash
+git clone <your-repository-url>
+cd accident_detection
+```
+
+### 3. Setup the Python Machine Learning Environment
+The Python scripts run the AI models behind the scenes. It's recommended to use a virtual environment.
+
+```bash
+# Create a virtual environment
 python -m venv venv
 
-# Activate virtual environment
-# Windows:
+# Activate the virtual environment
+# On Windows:
 venv\Scripts\activate
+# On Mac/Linux:
+source venv/bin/activate
 
-# Install requirements
+# Install the required Python packages
 pip install -r requirements.txt
 ```
 
-### 3. Run Workspace Setup
-Initialize directories, log databases, and verify weights:
-```powershell
-python setup.py
+### 4. Setup the Node.js Backend Server
+The Node.js server coordinates the AI models and the React frontend. Open a **new terminal window/tab**, navigate to the `backend` folder, and install its dependencies.
+
+```bash
+cd backend
+npm install
+```
+
+### 5. Setup the React Frontend
+The frontend is the graphical dashboard you interact with. Open a **third terminal window/tab**, navigate to the `frontend` folder, and install its dependencies.
+
+```bash
+cd frontend
+npm install
 ```
 
 ---
 
-## 🧪 Operational Workflow
+## 🏃‍♂️ How to Run the Project
 
-### Phase 1: Data Preprocessing
-Extract frames and create the dataset manifest for training:
-```powershell
-python pipeline/preprocess.py
-```
+To run the full system, you need to start **both** the backend and the frontend servers simultaneously.
 
-### Phase 2: YOLOv8 Classifier Fine-Tuning
-Train the YOLOv8-cls network to identify accident vs normal frames:
-```powershell
-python training/train_yolo.py
+### Step 1: Start the Backend Server
+In your backend terminal, run:
+```bash
+cd backend
+npm run dev
 ```
+*(The server will start running, usually on `http://localhost:5000` or `http://localhost:3000`)*
 
-### Phase 3: Temporal LSTM Training
-Train the ResNet18-backboned LSTM to model sequential temporal anomalies:
-```powershell
-python training/train_lstm.py
+### Step 2: Start the Frontend Dashboard
+In your frontend terminal, run:
+```bash
+cd frontend
+npm run dev
 ```
+*(Vite will spin up the frontend, usually accessible at `http://localhost:5173`)*
 
-### Phase 4: Threshold Testing & Diagnostics
-Calibrate pipeline trigger levels by feeding a pre-recorded clip and checking real-time scores:
-```powershell
-python tests/test_thresholds.py --source "data/raw/accident/RoadAccidents080_x264.mp4"
-```
+### Step 3: Access the Dashboard
+Open your web browser and go to the link provided by the frontend terminal (e.g., `http://localhost:5173`). 
 
 ---
 
-## 🖥️ Command Center Deployment
+## 📝 Usage
 
-Launch the high-tech, dark-themed operational command center:
-```powershell
-streamlit run app.py
-```
+1. **Dashboard Controls**: Use the sidebar to switch between "Accident Detection" and "Helmet Detection".
+2. **Video Input**: Upload an `.mp4` file or provide a stream URL.
+3. **Live Monitoring**: The system will automatically spawn Python workers in the background, process the video stream frame-by-frame, and stream the results (including bounding boxes and alerts) directly to your React interface via WebSockets.
 
-### Key Dashboard Features:
-1. **Multi-Source Select**: Connect a live USB webcam, an RTSP network stream address, or select from a dropdown listing high-res demo clips (`RoadAccidents080_x264.mp4` etc.) directly.
-2. **Automatic Feed Freeze**: Pauses and locks the stream on the exact millisecond a collision is registered, capturing the telemetry profile.
-3. **Collision Spot Localization**: Uses the vehicle detector to isolate the exact car/spot involved and draws an extra-thick, glowing red box with a `💥 ACCIDENT SPOT TRIGGER` overlay on the frozen frame.
-4. **GPS Beacon Localization**: Renders an interactive map indicating the exact location of the crash, alongside a dispatch coordinates telemetry display.
-5. **Database Registry History Lookup**: Browse logged historical threats via an inspection dropdown. Selecting any entry immediately loads its archived coordinates, confidence scores, and raw frozen snapshot for retrospective analysis.
-6. **Alert Reset Override**: Clear active alarms and hot-swap cameras or resume tracking with a single click.
+Enjoy exploring Aegis Eye!
