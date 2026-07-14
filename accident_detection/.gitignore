@@ -1,0 +1,42 @@
+# Virtual environment
+venv/
+.venv/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Environment variables
+.env
+
+# # Model weights
+# *.pt
+# *.pth
+
+# Dataset folders
+data/raw/
+data/processed/
+
+# Logs
+logs/
+
+# Build files
+*.egg-info/
+dist/
+
+# OS files
+.DS_Store
+
+# Video files
+*.mp4
+*.avi
+*.mov
+*.mkv
+*.wmv
+*.flv
+*.webm
+
+# Image files
+*.jpg
+*.jpeg
+*.png
