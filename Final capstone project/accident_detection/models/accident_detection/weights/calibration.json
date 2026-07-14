@@ -1,0 +1,5 @@
+{
+    "temperature": 1.025,
+    "initial_bce_loss": 0.6943359375,
+    "calibrated_bce_loss": 0.69384765625
+}
