@@ -18,11 +18,11 @@
 
 <h2 style = "color:#333;"> Student Details </h2>
 <div align = "left" style ="margin: 20px; font-size: 16px;">
-    <p><strong>Name:</strong> <!--- Add your name---> </p>
-    <p><strong>Email ID:</strong> <!--- Add your mail id ---> </p>
-    <p><strong>College Name:</strong> <!--- Add your college name---> </p>
-    <p><strong>Branch/Specialization :</strong> <!--- Add your branch name---> </p>
-    <p><strong>College ID:</strong> <!--- Add your college ID---> </p>
+    <p><strong>Name:</strong> Ved Devanand Dhanokar</p>
+    <p><strong>Email ID:</strong> dhanokarved@gmail.com </p>
+    <p><strong>College Name:</strong> Institute of Information and Communication Technology, MGM </p>
+    <p><strong>Branch/Specialization :</strong> IT </p>
+    <p><strong>College ID:</strong> 2305039 </p>
 </div>
 
 <hr style="border: 0; border-top: 1px solid #ccc; width: 80%;" />
