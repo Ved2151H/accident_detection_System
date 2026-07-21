@@ -42,6 +42,8 @@
 <div align="left" style="margin: 20px; font-size: 16px;">
 
 <p><strong>Trainer Name:</strong> Gaurav Sir</p>
+<p><strong>Trainer Email ID:</strong> </p>
+<p><strong>Trainer Designation:</strong> </p>
 
 </div>
 
