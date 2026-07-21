@@ -19,97 +19,82 @@
 <h2 style = "color:#333;"> Student Details </h2>
 <div align = "left" style ="margin: 20px; font-size: 16px;">
     <p><strong>Name:</strong> Ved Devanand Dhanokar</p>
-    <p><strong>Email ID:</strong> dhanokarved@gmail.com </p>
-    <p><strong>College Name:</strong> Institute of Information and Communication Technology, MGM </p>
-    <p><strong>Branch/Specialization :</strong> IT </p>
-    <p><strong>College ID:</strong> 2305039 </p>
+    <p><strong>Email ID:</strong> dhanokarved@gmail.com</p>
+    <p><strong>College Name:</strong> Institute of Information and Communication Technology (IICT), MGM University</p>
+    <p><strong>Branch/Specialization:</strong> Information Technology (IT)</p>
+    <p><strong>College ID:</strong> 2305039</p>
 </div>
 
 <hr style="border: 0; border-top: 1px solid #ccc; width: 80%;" />
 
 <h2 style="color:#333;"> Course Details </h2>
 <div align="left" style="margin: 20px; font-size: 16px;">
-    <p><strong>Course Opted:</strong> <!--- Add your course name---> </p>
-    <p><strong>Instructor Name:</strong> <!--- Add your instructor name---> </p>
+    <p><strong>Course Opted:</strong> Artificial Intelligence & Machine Learning (AI & ML)</p>
+    <p><strong>Instructor Name:</strong> Gaurav Sir</p>
 </div>
 <div align="left" style="margin: 20px; font-size: 16px;">
-    <p><strong>Duration:</strong> <!--- Durations in months---> </p>
+    <p><strong>Duration:</strong> 6 Months</p>
+</div>
 
 <hr style="border: 0; border-top: 1px solid #ccc; width: 80%;" />
 
 <h2 style="color:#333;"> Trainer Details </h2>
 <div align="left" style="margin: 20px; font-size: 16px;">
 
-<p><strong>Trainer Name:</strong> <!–– Add trainer name ––></p>
-<p><strong>Trainer Email ID:</strong> <!–– Add trainer email ––></p>
-<p><strong>Trainer Designation:</strong> <!–– Add designation along with company––></p>
+<p><strong>Trainer Name:</strong> Gaurav Sir</p>
+<p><strong>Trainer Email ID:</strong> (Add if available)</p>
+<p><strong>Trainer Designation:</strong> (Add if available)</p>
+
+</div>
 
 <hr style="border: 0; border-top: 1px solid #ccc; width: 80%;" />
 
 ## **Table of Contents**
-- [Course Learning](#course-learning-to-be-edited-by-student)
+- [Overall Learning](#overall-learning)
 - [Projects Completed](#projects-completed)
-- [Project Introduction](#project-introduction)
-- [Technologies Used](#technologies-used)
-- [Roles and Responsibilities](#roles-and-responsibilities)
-- [Project Report](#project-report)
-- [Learnings from LST & SST](#learnings-from-lst--sst)
+- [References](#references)
+- [Learnings from LST and SST](#learnings-from-lst-and-sst)
 - [Community Services](#community-services)
 - [Certificate](#certificate)
 - [Acknowledgments](#acknowledgments)
 
 <hr style="border: 0; border-top: 1px solid #ccc; width: 80%;" />
 
-
 ## Overall Learning 
 
-> _This is a placeholder. Replace the text below with your personal learning summary._
-During this course, I learned the fundamentals of web development and project design.
-I gained hands-on experience with HTML, CSS, JavaScript and strengthened my skills in 
-problem-solving, teamwork, documentation, and delivering real-world project solutions.
+During my AI & ML internship at SURE ProEd, I gained hands-on experience in Machine Learning, Deep Learning, Computer Vision, and AI application development. I worked with Python, NumPy, Pandas, OpenCV, Scikit-learn, TensorFlow, and PyTorch while building practical projects. The internship strengthened my problem-solving, debugging, teamwork, documentation, and software development skills. It also improved my understanding of the AI project development lifecycle, from data preprocessing to model deployment.
 
 
 <h2 style="color:#333;"> Projects Completed </h2>
 <div align="left" style="margin: 20px; font-size: 16px;">
 
-<p><strong><a href="#project1">Project 1:</a></strong> &lt;!-- Add project title → --&gt;</p>
+<p><strong><a href="#project1">Project 1:</a></strong> Accident Detection System</p>
 
-<p><strong><a href="#project2">Project 2:</a></strong> &lt;!-- Add project title → --&gt;</p>
+<p><strong><a href="#project2">Project 2:</a></strong> Zero UI</p>
 
-<p><strong><a href="#project3">Project 3:</a></strong> &lt;!-- Add project title → --&gt;</p>
-
-<p><em>(You can add more projects as needed)</em></p>
+<p><strong><a href="#project3">Project 3:</a></strong> DocuMind AI</p>
 
 </div>
 
 <!-- Project 1 -->
-<h3 id="project1">Project 1: <!-- Add Project Title --></h3>
+<h3 id="project1">Project 1: Accident Detection System</h3>
 <p>
-  This project involved designing and developing a basic functional module using the core concepts taught in the course.
-  It focused on understanding requirements, creating structured code, and implementing key features.
+  The Accident Detection System is an AI-powered application that detects road accidents from videos using computer vision and deep learning techniques. It aims to improve emergency response by automatically identifying accident events in real time.
 </p>
 <p>
-  <a href="<!-- Add link to full report -->" target="_blank"><strong>→ View Full Project Report</strong></a>
+  <a href="https://github.com/sure-trust/VED-DEVANAND-DHANOKAR-g37-ai-ml/tree/main/Final%20capstone%20project/accident_detection" target="_blank"><strong>→ View Full Project Code</strong></a>
 </p>
 
 <!-- Project 2 -->
-<h3 id="project2">Project 2: <!-- Add Project Title --></h3>
+<h3 id="project2">Project 2: Zero UI</h3>
 <p>
-  This project expanded on intermediate concepts and required integrating multiple components to build a more complete solution.
-  It enhanced understanding of UI/UX design, modular coding, and testing.
-</p>
-<p>
-  <a href="<!-- Add link to full report -->" target="_blank"><strong>→ View Full Project Report</strong></a>
+  Zero UI is a voice-controlled AI application that allows users to interact with a computer using natural speech instead of traditional input devices. The project focuses on creating a simple, hands-free, and accessible user experience.
 </p>
 
 <!-- Project 3 -->
-<h3 id="project3">Project 3: <!-- Add Project Title --></h3>
+<h3 id="project3">Project 3: DocuMind AI</h3>
 <p>
-  The final project showcased the practical application of all concepts learned throughout the course.  
-  It required planning, building, optimizing, and documenting a complete real-world project.
-</p>
-<p>
-  <a href="<!-- Add link to full report -->" target="_blank"><strong>→ View Full Project Report</strong></a>
+  DocuMind AI is an intelligent document assistant that enables users to upload documents and ask questions. It understands document content and provides accurate responses using AI-based document retrieval techniques.
 </p>
 
 <hr style="height:1px; border-top:1px solid #ccc; width:80%;" />
@@ -117,54 +102,50 @@ problem-solving, teamwork, documentation, and delivering real-world project solu
 
 ## **References**
 
-- [Wikipedia](https://wikipedia.com)
-<!--you can add refrences over here in same syntax as above -->
+- [Python](https://www.python.org)
+- [PyTorch](https://pytorch.org)
+- [TensorFlow](https://www.tensorflow.org)
+- [OpenCV](https://opencv.org)
+- [Scikit-learn](https://scikit-learn.org)
+- [Pandas](https://pandas.pydata.org)
+- [NumPy](https://numpy.org)
+
 ---
 
 
 ## **Learnings from LST and SST**
 
-<!-- add your experiences over here -->
-> _This is a placeholder. Replace the text below with your personal learning from LST and SST sessions summary._
-LST and SST sessions helped me....
+The LST (Life Skills Training) and SST (Soft Skills Training) sessions enhanced my communication, teamwork, leadership, time management, presentation, and interview skills. These sessions helped me build confidence, improve professional etiquette, and prepare for real-world workplace environments.
+
 ---
 
 ## **Community Services**
 
-<!-- add descreption in your own words -->
-
-During my internship period, I participated in multiple community-oriented activities .....<!-- add descreption in your own words -->
+During my internship at SURE ProEd, I actively participated in community service activities organized by the organization. These activities helped me understand the importance of social responsibility, teamwork, leadership, and contributing positively to society.
 
 ### **Activities Involved**
-<!-- add the location where you given -->
-- **Blood Donation** – Donated blood and supported basic assistance tasks during the camp.
-  
- <!-- add the location where you have panted -->
-- **Tree Plantation Drive** – Participated by planting trees and contributing to environmental improvement.
-
-  <!-- add the location where you helped -->
-- **Helping Elder Citizens** – Assisted two elderly individuals with simple daily tasks and provided support where needed. 
-
-<!-- you can write impacts according to your experience in your words-->
+- **Blood Donation Camp**
+- **Tree Plantation Drive**
+- **Helping Elder Citizens**
+- **Community Awareness Activities**
 
 ### **Impact / Contribution**
 
-- Helped create a supportive environment during the blood donation camp. <!-- add the location where you given -->
-- Actively participated in promoting a greener and cleaner surroundings.
-- Offered personal assistance to elder citizens, strengthening community bonds.
-- Improved skills in communication, coordination, and social responsibility.
+- Developed a strong sense of social responsibility.
+- Improved communication and teamwork skills.
+- Learned the importance of environmental conservation.
+- Strengthened leadership and coordination abilities.
+- Gained practical experience in volunteering and community engagement.
 
 ### **Photos**
 
-<!-- add your photos below -->
-<!-- change url below with your image urls (inside  src='')-->
-
-- These are just placeholder (sample) images <!-- remove this line -->
-
 <div align="center">
-<img src="https://media.licdn.com/dms/image/v2/D561FAQEJNBia4UCa5w/feedshare-document-images_800/B56Zm5b6SJJkAg-/1/1759752731458?e=1766016000&v=beta&t=7GABy91-0FNbir386wPdJ-Grr385JzS3tR5LQIw1CWg" alt="Community Service Photo 1" width="30%">
-<img src="https://media.licdn.com/dms/image/v2/D561FAQEJNBia4UCa5w/feedshare-document-images_800/B56Zm5b6SJJkAg-/2/1759752731458?e=1766016000&v=beta&t=6RfJQWWqlQUPcCvDnQNW7kR6yf7w-wPDsIPxum409ck" alt="Community Service Photo 2" width="30%">
-<img src="https://media.licdn.com/dms/image/v2/D561FAQEJNBia4UCa5w/feedshare-document-images_800/B56Zm5b6SJJkAg-/3/1759752731458?e=1766016000&v=beta&t=yWaunKdRdLUKBLbmM3UjRYYz-_GSCfWEQ3_R7dW0xLM" alt="Community Service Photo 3" width="30%">
+<img src="Community Services/20260405_132117.jpg" alt="Community Service Photo 1" width="45%">
+<img src="Community Services/20260405_132148.jpg" alt="Community Service Photo 2" width="45%">
+<br>
+<br>
+<img src="Community Services/20260405_132503.jpg" alt="Community Service Photo 3" width="45%">
+<img src="Community Services/20260405_132546.jpg" alt="Community Service Photo 4" width="45%">
 </div>
 
 ---
@@ -173,7 +154,6 @@ During my internship period, I participated in multiple community-oriented activ
 
 The internship certificate serves as an official acknowledgment of the successful completion of my training period. It will be issued by the organization upon fulfilling all required tasks and meeting the performance expectations of the program. The certificate validates the skills, experience, and contributions made during the internship.
 
-<!-- add your certificate image url below (inside src='')-->
 
 <p align="center">
 <img src="https://github.com/Lord-Rahul/Practice-Programs/blob/main/react/1/public/Gemini_Generated_Image_a6w8rda6w8rda6w8.png?raw=true" alt="Internship Certificate" width="80%">
@@ -183,7 +163,6 @@ The internship certificate serves as an official acknowledgment of the successfu
 
 ## **Acknowledgments**
 
-<!-- you can add Acknowledgments over here in same syntax as below . eg trainer name , company name , role etc -->
-
 - [Prof. Radhakumari Challa](https://www.linkedin.com/in/prof-radhakumari-challa-a3850219b) , Executive Director and Founder - [SURE Trust](https://www.suretrustforruralyouth.com/)
 
+</div>
