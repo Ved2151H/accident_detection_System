@@ -42,8 +42,6 @@
 <div align="left" style="margin: 20px; font-size: 16px;">
 
 <p><strong>Trainer Name:</strong> Gaurav Sir</p>
-<p><strong>Trainer Email ID:</strong> (Add if available)</p>
-<p><strong>Trainer Designation:</strong> (Add if available)</p>
 
 </div>
 
@@ -90,11 +88,17 @@ During my AI & ML internship at SURE ProEd, I gained hands-on experience in Mach
 <p>
   Zero UI is a voice-controlled AI application that allows users to interact with a computer using natural speech instead of traditional input devices. The project focuses on creating a simple, hands-free, and accessible user experience.
 </p>
+<p>
+  <a href="https://github.com/Ved2151H/ZeroUi_anomaly-detection_system" target="_blank"><strong>→ View Full Project Code</strong></a>
+</p>
 
 <!-- Project 3 -->
 <h3 id="project3">Project 3: DocuMind AI</h3>
 <p>
   DocuMind AI is an intelligent document assistant that enables users to upload documents and ask questions. It understands document content and provides accurate responses using AI-based document retrieval techniques.
+</p>
+<p>
+  <a href="https://github.com/Ved2151H/DocuMind_AI_using_-Ollama" target="_blank"><strong>→ View Full Project Code</strong></a>
 </p>
 
 <hr style="height:1px; border-top:1px solid #ccc; width:80%;" />
