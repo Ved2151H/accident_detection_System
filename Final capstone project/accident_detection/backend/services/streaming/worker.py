@@ -80,8 +80,13 @@ def main():
         print(json.dumps({"type": "error", "message": "Failed to read first frame from source"}), flush=True)
         sys.exit(1)
 
-    # Encode first frame to base64
-    _, buffer_img = cv2.imencode('.jpg', first_frame)
+    h_f, w_f = first_frame.shape[:2]
+    scale_f = 640.0 / w_f
+    if scale_f < 1.0:
+        disp_first = cv2.resize(first_frame, (640, int(h_f * scale_f)))
+    else:
+        disp_first = first_frame
+    _, buffer_img = cv2.imencode('.jpg', disp_first, [int(cv2.IMWRITE_JPEG_QUALITY), 70])
     first_frame_b64 = base64.b64encode(buffer_img).decode('utf-8')
 
     # 3. Defer DB and location helper imports to keep startup ultra-fast
@@ -302,7 +307,13 @@ def main():
                 st_mock.session_state.accident_logged_this_trigger = False
 
             # Encode annotated frame to base64
-            _, buffer_img = cv2.imencode('.jpg', annotated)
+            h_dim, w_dim = annotated.shape[:2]
+            scale_ratio = 640.0 / w_dim
+            if scale_ratio < 1.0:
+                disp_frame = cv2.resize(annotated, (640, int(h_dim * scale_ratio)))
+            else:
+                disp_frame = annotated
+            _, buffer_img = cv2.imencode('.jpg', disp_frame, [int(cv2.IMWRITE_JPEG_QUALITY), 70])
             jpg_as_text = base64.b64encode(buffer_img).decode('utf-8')
 
             if out_video is not None:
