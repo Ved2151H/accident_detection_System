@@ -78,5 +78,5 @@ _vehicle_detector = None
 def load_vehicle_detector():
     global _vehicle_detector
     if _vehicle_detector is None:
-        _vehicle_detector = YOLO("models/helmet_detection/weights/yolov8n.pt")
+        _vehicle_detector = YOLO("models/accident_detection/weights/yolov8n.pt")
     return _vehicle_detector

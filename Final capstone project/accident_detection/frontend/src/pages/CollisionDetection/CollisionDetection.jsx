@@ -22,6 +22,11 @@ function CollisionDetection({ theme }) {
   const [location, setLocation] = useState({ lat: 18.5204, lon: 73.8567, city_name: 'Pune (West)', digipin: '4FP-492-CMTF' });
   const [incidentData, setIncidentData] = useState(null);
 
+  // New MLP and MDP states
+  const [mlpConfidence, setMlpConfidence] = useState(0);
+  const [riskLevel, setRiskLevel] = useState('Low');
+  const [featureExplanations, setFeatureExplanations] = useState({});
+
   // Live frame display
   const [currentFrame, setCurrentFrame] = useState(null);
   
@@ -113,6 +118,9 @@ function CollisionDetection({ theme }) {
           setAlertState(msg.alert_state);
           setYoloConf(msg.raw_prob);
           setLstmProb(msg.calibrated_prob);
+          setMlpConfidence(msg.accident_confidence);
+          setRiskLevel(msg.risk_level);
+          setFeatureExplanations(msg.feature_explanations || {});
           setProgress(msg.progress);
           setFps(msg.fps);
           setFeatures(msg.features || {});
@@ -505,6 +513,34 @@ function CollisionDetection({ theme }) {
                 {(lstmProb * 100).toFixed(1)}%
               </div>
             </div>
+            <div className="telemetry-card">
+              <span className="telemetry-label">MLP Fusion Confidence</span>
+              <div className="telemetry-value" style={{ color: mlpConfidence > confidence * 100 ? 'var(--danger-color)' : 'var(--success-color)' }}>
+                {mlpConfidence.toFixed(1)}%
+              </div>
+            </div>
+            <div className="telemetry-card">
+              <span className="telemetry-label">MDP Severity Level</span>
+              <div className="telemetry-value" style={{ 
+                color: riskLevel === 'Critical' ? 'var(--danger-color)' : 
+                       riskLevel === 'High' ? 'orange' : 
+                       riskLevel === 'Medium' ? 'yellow' : 'var(--success-color)' 
+              }}>
+                {riskLevel}
+              </div>
+            </div>
+            {Object.keys(featureExplanations).length > 0 && (
+              <div className="telemetry-card" style={{ gridColumn: 'span 2', marginTop: '4px' }}>
+                <span className="telemetry-label">MLP Feature Attributions</span>
+                <div className="telemetry-details">
+                  <ul style={{ margin: 0, paddingLeft: '20px' }}>
+                    {Object.entries(featureExplanations).map(([feature, weight]) => (
+                      <li key={feature}>{feature}: {weight.toFixed(1)}%</li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            )}
             <div className="telemetry-card" style={{ gridColumn: 'span 2', marginTop: '4px' }}>
               <span className="telemetry-label">Processing Performance</span>
               <div className="telemetry-details">

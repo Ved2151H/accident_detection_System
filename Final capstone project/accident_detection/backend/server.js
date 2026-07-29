@@ -311,44 +311,6 @@ app.post('/api/clear-incidents', (req, res) => {
   });
 });
 
-// Query helmet violations from CSV log file
-app.get('/api/violations', (req, res) => {
-  const csvPath = path.join(projectRoot, 'logs', 'helmet_violations.csv');
-
-  if (!fs.existsSync(csvPath)) {
-    return res.json({ violations: [] });
-  }
-
-  fs.readFile(csvPath, 'utf8', (err, data) => {
-    if (err) {
-      return res.status(500).json({ error: err.message });
-    }
-
-    const lines = data.trim().split('\n');
-    if (lines.length <= 1) {
-      return res.json({ violations: [] });
-    }
-
-    // Parse header and rows
-    const headers = lines[0].split(',').map(h => h.replace(/"/g, '').trim());
-    const violations = [];
-
-    for (let i = 1; i < lines.length; i++) {
-      const cols = lines[i].split(',').map(c => c.replace(/"/g, '').trim());
-      if (cols.length < headers.length) continue;
-
-      const obj = {};
-      headers.forEach((h, index) => {
-        obj[h] = cols[index];
-      });
-      violations.push(obj);
-    }
-
-    // Return in reverse chronological order
-    res.json({ violations: violations.reverse() });
-  });
-});
-
 // Get processed export outputs
 app.get('/api/outputs', (req, res) => {
   const outputsDir = path.join(projectRoot, 'logs', 'outputs');

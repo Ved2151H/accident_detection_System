@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Shield, Eye, Settings, AlertTriangle, List, CheckSquare, ChevronLeft, ChevronRight } from 'lucide-react';
 import CollisionDetection from './pages/CollisionDetection/CollisionDetection';
-import HelmetDetection from './pages/HelmetDetection/HelmetDetection';
 
 function App() {
   const [theme, setTheme] = useState('cyberpunk');
@@ -41,14 +40,6 @@ function App() {
           >
             <AlertTriangle size={18} style={{ flexShrink: 0 }} />
             {!collapsed && <span>Collision Detection</span>}
-          </button>
-          <button
-            className={`nav-item ${currentPage === 'helmet' ? 'active' : ''}`}
-            onClick={() => setCurrentPage('helmet')}
-            title="Helmet Detection"
-          >
-            <Shield size={18} style={{ flexShrink: 0 }} />
-            {!collapsed && <span>Helmet Detection</span>}
           </button>
         </nav>
 
@@ -97,15 +88,11 @@ function App() {
       <main className="main-content">
         <header>
           <h2 className="header-title">
-            {currentPage === 'collision' ? '🛡️ Accident Detection & Geolocalization' : '🏍️ Helmet Compliance Monitor'}
+            🛡️ Accident Detection & Geolocalization
           </h2>
         </header>
 
-        {currentPage === 'collision' ? (
-          <CollisionDetection theme={theme} />
-        ) : (
-          <HelmetDetection theme={theme} />
-        )}
+        <CollisionDetection theme={theme} />
       </main>
     </div>
   );
