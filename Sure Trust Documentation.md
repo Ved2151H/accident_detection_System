@@ -148,11 +148,14 @@ During my internship at SURE ProEd, I actively participated in community service
 <div align="center">
 <img src="Community Services/20260405_132117.jpg" alt="Community Service Photo 1" width="45%">
 <img src="Community Services/20260405_132148.jpg" alt="Community Service Photo 2" width="45%">
+<img src="Community Services/WhatsApp Image 2026-08-06 at 8.17.58 AM (1).jpeg" alt="Community Service Photo 2" width="45%">
+<img src="Community Services/WhatsApp Image 2026-08-06 at 8.17.57 AM.jpeg" alt="Community Service Photo 2" width="45%">
 <br>
 <br>
 <img src="Community Services/20260405_132503.jpg" alt="Community Service Photo 3" width="45%">
 <img src="Community Services/20260405_132546.jpg" alt="Community Service Photo 4" width="45%">
 <img src="Community Services/WhatsApp Image 2026-08-08 at 160.35.50 PM.jpeg" alt="Community Service Photo 5" width="45%">
+<img src="Community Services/WhatsApp Image 2026-08-08 at 10.35.50 PM.jpeg" alt="Community Service Photo 6" width="45%">
 </div>
 
 ---
