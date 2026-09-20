@@ -146,7 +146,7 @@ During my internship at SURE ProEd, I actively participated in community service
 ### **Photos**
 
 <div align="center">
-<img src="Community Services/WhatsApp Image 2026-08-20 at 7.19.10 PM (1).jpeg" alt="Community Service Photo 1" width="45%">
+<img src="Final capstone project/1.jpeg" alt="Community Service Photo 1" width="45%">
 
 
 <br>
